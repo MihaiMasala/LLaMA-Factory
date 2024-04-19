@@ -25,9 +25,9 @@ def preprocess_pretrain_dataset(
     text_examples = [messages[0]["content"] + tokenizer.eos_token for messages in examples["prompt"]]
 
     if not data_args.packing:
-        if data_args.template == "gemma":
-            text_examples = [tokenizer.bos_token + example for example in text_examples]
-
+        # if data_args.template == "gemma":
+        # always add bos_token at beginning of text 
+        text_examples = [tokenizer.bos_token + example for example in text_examples]
         result = tokenizer(text_examples, add_special_tokens=False, max_length=data_args.cutoff_len)
     else:
         tokenized_examples = tokenizer(text_examples, add_special_tokens=False)
