@@ -163,3 +163,5 @@ cython_debug/
 user.config
 saves/
 cache/
+data/raw_ro_pretrain/
+data/ro_pretrain/
