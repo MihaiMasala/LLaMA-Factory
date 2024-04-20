@@ -359,7 +359,7 @@
     }
   },
   "ro_pretrain": {
-    "hf_hub_url": "ro_pretrain",
+    "file_name": "ro_pretrain/",
     "columns": {
       "prompt": "raw_text"
     }
