@@ -1,4 +1,5 @@
 #!/bin/bash
+# DO NOT use GPTQ/AWQ model in FSDP+QLoRA
 
 pip install "transformers>=4.39.1"
 pip install "accelerate>=0.28.0"
