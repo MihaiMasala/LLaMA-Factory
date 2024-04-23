@@ -165,3 +165,4 @@ saves/
 cache/
 data/raw_ro_pretrain/
 data/ro_pretrain/
+data/ro_sft*
