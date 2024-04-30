@@ -41,6 +41,19 @@
       "system_tag": "system"
     }
   },
+  "ro_sft_bench":{
+    "formatting": "sharegpt",
+    "file_name": "ro_sft_bench.json",
+    "columns": {
+      "messages": "messages"
+    },
+    "tags": {
+      "role_tag": "role",
+      "content_tag": "content",
+      "user_tag": "user",
+      "assistant_tag": "assistant"
+    }
+  },
   "ro_sft_orca":{
     "formatting": "sharegpt",
     "file_name": "ro_sft_orca.json",
