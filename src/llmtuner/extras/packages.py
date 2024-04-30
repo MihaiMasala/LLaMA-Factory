@@ -1,16 +1,23 @@
 import importlib.metadata
 import importlib.util
+from typing import TYPE_CHECKING
+
+from packaging import version
+
+
+if TYPE_CHECKING:
+    from packaging.version import Version
 
 
 def _is_package_available(name: str) -> bool:
     return importlib.util.find_spec(name) is not None
 
 
-def _get_package_version(name: str) -> str:
+def _get_package_version(name: str) -> "Version":
     try:
-        return importlib.metadata.version(name)
+        return version.parse(importlib.metadata.version(name))
     except Exception:
-        return "0.0.0"
+        return version.parse("0.0.0")
 
 
 def is_fastapi_availble():
@@ -18,7 +25,7 @@ def is_fastapi_availble():
 
 
 def is_flash_attn2_available():
-    return _is_package_available("flash_attn") and _get_package_version("flash_attn").startswith("2")
+    return _is_package_available("flash_attn") and _get_package_version("flash_attn") > version.parse("2.0.0")
 
 
 def is_galore_available():
@@ -41,12 +48,20 @@ def is_nltk_available():
     return _is_package_available("nltk")
 
 
+def is_pillow_available():
+    return _is_package_available("PIL")
+
+
 def is_requests_available():
     return _is_package_available("requests")
 
 
 def is_rouge_available():
     return _is_package_available("rouge_chinese")
+
+
+def is_sdpa_available():
+    return _get_package_version("torch") > version.parse("2.1.1")
 
 
 def is_starlette_available():

@@ -2,16 +2,23 @@ import uuid
 from typing import TYPE_CHECKING, AsyncGenerator, AsyncIterator, Dict, List, Optional, Sequence
 
 from ..data import get_template_and_fix_tokenizer
-from ..extras.misc import get_device_count
+from ..extras.misc import get_device_count, infer_optim_dtype
 from ..extras.packages import is_vllm_available
-from ..model import load_tokenizer
+from ..model import load_config, load_tokenizer
 from .base_engine import BaseEngine, Response
 
 
 if is_vllm_available():
     from vllm import AsyncEngineArgs, AsyncLLMEngine, RequestOutput, SamplingParams
+    from vllm.lora.request import LoRARequest
+    from vllm.sequence import MultiModalData
+
 
 if TYPE_CHECKING:
+    import torch
+    from numpy.typing import NDArray
+    from transformers.image_processing_utils import BaseImageProcessor
+
     from ..hparams import DataArguments, FinetuningArguments, GeneratingArguments, ModelArguments
 
 
@@ -23,31 +30,59 @@ class VllmEngine(BaseEngine):
         finetuning_args: "FinetuningArguments",
         generating_args: "GeneratingArguments",
     ) -> None:
+        config = load_config(model_args)  # may download model from ms hub
+        infer_dtype = infer_optim_dtype(model_dtype=getattr(config, "torch_dtype", None))
+        infer_dtype = str(infer_dtype).split(".")[-1]
+
         self.can_generate = finetuning_args.stage == "sft"
-        engine_args = AsyncEngineArgs(
-            model=model_args.model_name_or_path,
-            trust_remote_code=True,
-            max_model_len=model_args.vllm_maxlen,
-            tensor_parallel_size=get_device_count() or 1,
-            gpu_memory_utilization=model_args.vllm_gpu_util,
-            disable_log_stats=True,
-            disable_log_requests=True,
-            enforce_eager=model_args.vllm_enforce_eager,
-        )
-        self.model = AsyncLLMEngine.from_engine_args(engine_args)
-        self.tokenizer = load_tokenizer(model_args)
+        tokenizer_module = load_tokenizer(model_args)
+        self.tokenizer = tokenizer_module["tokenizer"]
+        self.processor = tokenizer_module["processor"]
         self.tokenizer.padding_side = "left"
         self.template = get_template_and_fix_tokenizer(self.tokenizer, data_args.template)
         self.generating_args = generating_args.to_dict()
+
+        engine_args = {
+            "model": model_args.model_name_or_path,
+            "trust_remote_code": True,
+            "download_dir": model_args.cache_dir,
+            "dtype": infer_dtype,
+            "max_model_len": model_args.vllm_maxlen,
+            "tensor_parallel_size": get_device_count() or 1,
+            "gpu_memory_utilization": model_args.vllm_gpu_util,
+            "disable_log_stats": True,
+            "disable_log_requests": True,
+            "enforce_eager": model_args.vllm_enforce_eager,
+            "enable_lora": model_args.adapter_name_or_path is not None,
+        }
+
+        if model_args.visual_inputs:
+            # TODO: auto derive from config
+            # https://github.com/vllm-project/vllm/pull/3042#issuecomment-1984893549
+            self.image_feature_size = 576
+            engine_args["image_input_type"] = "pixel_values"
+            engine_args["image_token_id"] = self.tokenizer.convert_tokens_to_ids("<image>")
+            engine_args["image_input_shape"] = "1,3,336,336"
+            engine_args["image_feature_size"] = self.image_feature_size
+
+        self.model = AsyncLLMEngine.from_engine_args(AsyncEngineArgs(**engine_args))
+        if model_args.adapter_name_or_path is not None:
+            self.lora_request = LoRARequest("default", 1, model_args.adapter_name_or_path[0])
+        else:
+            self.lora_request = None
 
     async def _generate(
         self,
         messages: Sequence[Dict[str, str]],
         system: Optional[str] = None,
         tools: Optional[str] = None,
+        image: Optional["NDArray"] = None,
         **input_kwargs,
     ) -> AsyncIterator["RequestOutput"]:
         request_id = "chatcmpl-{}".format(uuid.uuid4().hex)
+        if self.processor is not None and image is not None and "<image>" not in messages[0]["content"]:
+            messages[0]["content"] = "<image>" * self.image_feature_size + messages[0]["content"]
+
         paired_messages = messages + [{"role": "assistant", "content": ""}]
         prompt_ids, _ = self.template.encode_oneturn(
             tokenizer=self.tokenizer, messages=paired_messages, system=system, tools=tools
@@ -91,8 +126,21 @@ class VllmEngine(BaseEngine):
             max_tokens=generating_args["max_new_tokens"],
             skip_special_tokens=True,
         )
+
+        if self.processor is not None and image is not None:
+            image_processor: "BaseImageProcessor" = getattr(self.processor, "image_processor")
+            pixel_values: "torch.Tensor" = image_processor(image, return_tensors="pt")["pixel_values"]
+            multi_modal_data = MultiModalData(type=MultiModalData.Type.IMAGE, data=pixel_values)
+        else:
+            multi_modal_data = None
+
         result_generator = self.model.generate(
-            prompt=None, sampling_params=sampling_params, request_id=request_id, prompt_token_ids=prompt_ids
+            prompt=None,
+            sampling_params=sampling_params,
+            request_id=request_id,
+            prompt_token_ids=prompt_ids,
+            lora_request=self.lora_request,
+            multi_modal_data=multi_modal_data,
         )
         return result_generator
 
@@ -104,10 +152,11 @@ class VllmEngine(BaseEngine):
         messages: Sequence[Dict[str, str]],
         system: Optional[str] = None,
         tools: Optional[str] = None,
+        image: Optional["NDArray"] = None,
         **input_kwargs,
     ) -> List["Response"]:
         final_output = None
-        generator = await self._generate(messages, system, tools, **input_kwargs)
+        generator = await self._generate(messages, system, tools, image, **input_kwargs)
         async for request_output in generator:
             final_output = request_output
 
@@ -129,10 +178,11 @@ class VllmEngine(BaseEngine):
         messages: Sequence[Dict[str, str]],
         system: Optional[str] = None,
         tools: Optional[str] = None,
+        image: Optional["NDArray"] = None,
         **input_kwargs,
     ) -> AsyncGenerator[str, None]:
         generated_text = ""
-        generator = await self._generate(messages, system, tools, **input_kwargs)
+        generator = await self._generate(messages, system, tools, image, **input_kwargs)
         async for result in generator:
             delta_text = result.outputs[0].text[len(generated_text) :]
             generated_text = result.outputs[0].text

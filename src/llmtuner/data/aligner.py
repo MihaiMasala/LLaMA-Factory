@@ -1,3 +1,4 @@
+import os
 from functools import partial
 from typing import TYPE_CHECKING, Any, Dict, List, Union
 
@@ -13,8 +14,23 @@ if TYPE_CHECKING:
     from .parser import DatasetAttr
 
 
-def convert_alpaca(examples: Dict[str, List[Any]], dataset_attr: "DatasetAttr") -> Dict[str, List[Any]]:
-    outputs = {"prompt": [], "response": [], "system": [], "tools": []}
+def _convert_images(images: List[Any], dataset_attr: "DatasetAttr", data_args: "DataArguments") -> List[Any]:
+    outputs = []
+    if dataset_attr.load_from in ["script", "file"]:
+        for image in images:
+            if isinstance(image, str) and os.path.isfile(os.path.join(data_args.dataset_dir, image)):
+                outputs.append(os.path.join(data_args.dataset_dir, image))
+            else:
+                outputs.append(image)
+
+    return outputs
+
+
+def convert_alpaca(
+    examples: Dict[str, List[Any]], dataset_attr: "DatasetAttr", data_args: "DataArguments"
+) -> Dict[str, List[Any]]:
+    outputs = {"prompt": [], "response": [], "system": [], "tools": [], "images": []}
+    convert_images = partial(_convert_images, dataset_attr=dataset_attr, data_args=data_args)
     for i in range(len(examples[dataset_attr.prompt])):
         prompt = []
         if dataset_attr.history and isinstance(examples[dataset_attr.history][i], list):
@@ -44,12 +60,16 @@ def convert_alpaca(examples: Dict[str, List[Any]], dataset_attr: "DatasetAttr") 
         outputs["response"].append(response)
         outputs["system"].append(examples[dataset_attr.system][i] if dataset_attr.system else "")
         outputs["tools"].append("")
+        outputs["images"].append(convert_images(examples[dataset_attr.images][i]) if dataset_attr.images else [])
 
     return outputs
 
 
-def convert_sharegpt(examples: Dict[str, List[Any]], dataset_attr: "DatasetAttr") -> Dict[str, List[Any]]:
-    outputs = {"prompt": [], "response": [], "system": [], "tools": []}
+def convert_sharegpt(
+    examples: Dict[str, List[Any]], dataset_attr: "DatasetAttr", data_args: "DataArguments"
+) -> Dict[str, List[Any]]:
+    outputs = {"prompt": [], "response": [], "system": [], "tools": [], "images": []}
+    convert_images = partial(_convert_images, dataset_attr=dataset_attr, data_args=data_args)
     tag_mapping = {
         dataset_attr.user_tag: Role.USER.value,
         dataset_attr.assistant_tag: Role.ASSISTANT.value,
@@ -84,6 +104,7 @@ def convert_sharegpt(examples: Dict[str, List[Any]], dataset_attr: "DatasetAttr"
         outputs["response"].append(aligned_messages[-1:])
         outputs["system"].append(system)
         outputs["tools"].append(examples[dataset_attr.tools][i] if dataset_attr.tools else "")
+        outputs["images"].append(convert_images(examples[dataset_attr.images][i]) if dataset_attr.images else [])
 
     return outputs
 
@@ -96,12 +117,13 @@ def align_dataset(
         prompt: [{"role": "user", "content": "..."}] * (2T - 1)
         response: [{"role": "assistant", "content": "..."}] * N (N > 1 for ranking dataset)
         system: "..."
-        tools: "..."
+        tools: "...",
+        images: [],
     """
     if dataset_attr.formatting == "alpaca":
-        convert_func = partial(convert_alpaca, dataset_attr=dataset_attr)
+        convert_func = partial(convert_alpaca, dataset_attr=dataset_attr, data_args=data_args)
     else:
-        convert_func = partial(convert_sharegpt, dataset_attr=dataset_attr)
+        convert_func = partial(convert_sharegpt, dataset_attr=dataset_attr, data_args=data_args)
 
     column_names = list(next(iter(dataset)).keys())
     features = Features.from_dict(
@@ -114,6 +136,7 @@ def align_dataset(
             ],
             "system": {"dtype": "string", "_type": "Value"},
             "tools": {"dtype": "string", "_type": "Value"},
+            "images": [{"_type": "Image"}],
         }
     )
     kwargs = {}

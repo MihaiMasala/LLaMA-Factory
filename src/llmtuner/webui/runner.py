@@ -67,7 +67,7 @@ class Runner:
         if not model_path:
             return ALERTS["err_no_path"][lang]
 
-        if len(dataset) == 0:
+        if not dataset:
             return ALERTS["err_no_dataset"][lang]
 
         if not from_preview and self.demo_mode:
@@ -122,8 +122,9 @@ class Runner:
             quantization_bit=int(get("top.quantization_bit")) if get("top.quantization_bit") in ["8", "4"] else None,
             template=get("top.template"),
             rope_scaling=get("top.rope_scaling") if get("top.rope_scaling") in ["linear", "dynamic"] else None,
-            flash_attn=(get("top.booster") == "flashattn"),
+            flash_attn="fa2" if get("top.booster") == "flashattn2" else "auto",
             use_unsloth=(get("top.booster") == "unsloth"),
+            visual_inputs=get("top.visual_inputs"),
             dataset_dir=get("train.dataset_dir"),
             dataset=",".join(get("train.dataset")),
             cutoff_len=get("train.cutoff_len"),
@@ -222,8 +223,9 @@ class Runner:
             quantization_bit=int(get("top.quantization_bit")) if get("top.quantization_bit") in ["8", "4"] else None,
             template=get("top.template"),
             rope_scaling=get("top.rope_scaling") if get("top.rope_scaling") in ["linear", "dynamic"] else None,
-            flash_attn=(get("top.booster") == "flashattn"),
+            flash_attn="fa2" if get("top.booster") == "flashattn2" else "auto",
             use_unsloth=(get("top.booster") == "unsloth"),
+            visual_inputs=get("top.visual_inputs"),
             dataset_dir=get("eval.dataset_dir"),
             dataset=",".join(get("eval.dataset")),
             cutoff_len=get("eval.cutoff_len"),

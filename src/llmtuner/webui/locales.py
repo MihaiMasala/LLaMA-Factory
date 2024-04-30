@@ -129,6 +129,17 @@ LOCALES = {
             "label": "加速方式",
         },
     },
+    "visual_inputs": {
+        "en": {
+            "label": "Visual inputs",
+        },
+        "ru": {
+            "label": "визуальные входы",
+        },
+        "zh": {
+            "label": "图像输入",
+        },
+    },
     "training_stage": {
         "en": {
             "label": "Stage",
@@ -1073,6 +1084,17 @@ LOCALES = {
             "placeholder": "工具列表（非必填）",
         },
     },
+    "image": {
+        "en": {
+            "label": "Image (optional)",
+        },
+        "ru": {
+            "label": "Изображение (по желанию)",
+        },
+        "zh": {
+            "label": "图像（非必填）",
+        },
+    },
     "query": {
         "en": {
             "placeholder": "Input...",
@@ -1150,7 +1172,7 @@ LOCALES = {
             "value": "清空历史",
         },
     },
-    "max_shard_size": {
+    "export_size": {
         "en": {
             "label": "Max shard size (GB)",
             "info": "The maximum size for a model file.",
@@ -1190,6 +1212,20 @@ LOCALES = {
         "zh": {
             "label": "导出量化数据集",
             "info": "量化过程中使用的校准数据集。",
+        },
+    },
+    "export_device": {
+        "en": {
+            "label": "Export device",
+            "info": "Which device should be used to export model.",
+        },
+        "ru": {
+            "label": "Экспорт устройство",
+            "info": "Какое устройство следует использовать для экспорта модели.",
+        },
+        "zh": {
+            "label": "导出设备",
+            "info": "导出模型使用的设备类型。",
         },
     },
     "export_legacy_format": {
@@ -1287,7 +1323,12 @@ ALERTS = {
     "err_no_export_dir": {
         "en": "Please provide export dir.",
         "ru": "Пожалуйста, укажите каталог для экспорта.",
-        "zh": "请填写导出目录",
+        "zh": "请填写导出目录。",
+    },
+    "err_gptq_lora": {
+        "en": "Please merge adapters before quantizing the model.",
+        "ru": "Пожалуйста, объедините адаптеры перед квантованием модели.",
+        "zh": "量化模型前请先合并适配器。",
     },
     "err_failed": {
         "en": "Failed.",

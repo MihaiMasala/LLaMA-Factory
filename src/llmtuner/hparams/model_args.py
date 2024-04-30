@@ -22,7 +22,7 @@ class ModelArguments:
         metadata={"help": "Where to store the pre-trained models downloaded from huggingface.co or modelscope.cn."},
     )
     use_fast_tokenizer: bool = field(
-        default=False,
+        default=True,
         metadata={"help": "Whether or not to use one of the fast tokenizer (backed by the tokenizers library)."},
     )
     resize_vocab: bool = field(
@@ -32,6 +32,10 @@ class ModelArguments:
     split_special_tokens: bool = field(
         default=False,
         metadata={"help": "Whether or not the special tokens should be split during the tokenization process."},
+    )
+    new_special_tokens: Optional[str] = field(
+        default=None,
+        metadata={"help": "Special tokens to be added into the tokenizer."},
     )
     model_revision: str = field(
         default="main",
@@ -61,9 +65,9 @@ class ModelArguments:
         default=None,
         metadata={"help": "Which scaling strategy should be adopted for the RoPE embeddings."},
     )
-    flash_attn: bool = field(
-        default=False,
-        metadata={"help": "Enable FlashAttention for faster training."},
+    flash_attn: Literal["off", "sdpa", "fa2", "auto"] = field(
+        default="auto",
+        metadata={"help": "Enable FlashAttention for faster training and inference."},
     )
     shift_attn: bool = field(
         default=False,
@@ -76,6 +80,10 @@ class ModelArguments:
     use_unsloth: bool = field(
         default=False,
         metadata={"help": "Whether or not to use unsloth's optimization for the LoRA training."},
+    )
+    visual_inputs: bool = field(
+        default=False,
+        metadata={"help": "Whethor or not to use multimodal LLM that accepts visual inputs."},
     )
     moe_aux_loss_coef: Optional[float] = field(
         default=None,
@@ -135,7 +143,7 @@ class ModelArguments:
     )
     export_device: str = field(
         default="cpu",
-        metadata={"help": "The device used in model export."},
+        metadata={"help": "The device used in model export, use cuda to avoid addmm errors."},
     )
     export_quantization_bit: Optional[int] = field(
         default=None,
@@ -174,8 +182,14 @@ class ModelArguments:
         if self.split_special_tokens and self.use_fast_tokenizer:
             raise ValueError("`split_special_tokens` is only supported for slow tokenizers.")
 
+        if self.visual_inputs and self.use_unsloth:
+            raise ValueError("Unsloth does not support MLLM yet. Stay tuned.")
+
         if self.adapter_name_or_path is not None:  # support merging multiple lora weights
             self.adapter_name_or_path = [path.strip() for path in self.adapter_name_or_path.split(",")]
+
+        if self.new_special_tokens is not None:  # support multiple special tokens
+            self.new_special_tokens = [token.strip() for token in self.new_special_tokens.split(",")]
 
         assert self.quantization_bit in [None, 8, 4], "We only accept 4-bit or 8-bit quantization."
         assert self.export_quantization_bit in [None, 8, 4, 3, 2], "We only accept 2/3/4/8-bit quantization."

@@ -2,6 +2,8 @@ import json
 import os
 from typing import TYPE_CHECKING, Dict, Generator, List, Optional, Sequence, Tuple
 
+from numpy.typing import NDArray
+
 from ..chat import ChatModel
 from ..data import Role
 from ..extras.misc import torch_gc
@@ -31,7 +33,10 @@ class WebChatModel(ChatModel):
         if demo_mode and os.environ.get("DEMO_MODEL") and os.environ.get("DEMO_TEMPLATE"):  # load demo model
             model_name_or_path = os.environ.get("DEMO_MODEL")
             template = os.environ.get("DEMO_TEMPLATE")
-            super().__init__(dict(model_name_or_path=model_name_or_path, template=template))
+            infer_backend = os.environ.get("DEMO_BACKEND", "huggingface")
+            super().__init__(
+                dict(model_name_or_path=model_name_or_path, template=template, infer_backend=infer_backend)
+            )
 
     @property
     def loaded(self) -> bool:
@@ -72,8 +77,9 @@ class WebChatModel(ChatModel):
             finetuning_type=get("top.finetuning_type"),
             quantization_bit=int(get("top.quantization_bit")) if get("top.quantization_bit") in ["8", "4"] else None,
             template=get("top.template"),
-            flash_attn=(get("top.booster") == "flash_attn"),
+            flash_attn="fa2" if get("top.booster") == "flashattn2" else "auto",
             use_unsloth=(get("top.booster") == "unsloth"),
+            visual_inputs=get("top.visual_inputs"),
             rope_scaling=get("top.rope_scaling") if get("top.rope_scaling") in ["linear", "dynamic"] else None,
             infer_backend=get("infer.infer_backend"),
         )
@@ -109,6 +115,7 @@ class WebChatModel(ChatModel):
         messages: Sequence[Dict[str, str]],
         system: str,
         tools: str,
+        image: Optional[NDArray],
         max_new_tokens: int,
         top_p: float,
         temperature: float,
@@ -116,7 +123,7 @@ class WebChatModel(ChatModel):
         chatbot[-1][1] = ""
         response = ""
         for new_text in self.stream_chat(
-            messages, system, tools, max_new_tokens=max_new_tokens, top_p=top_p, temperature=temperature
+            messages, system, tools, image, max_new_tokens=max_new_tokens, top_p=top_p, temperature=temperature
         ):
             response += new_text
             if tools:

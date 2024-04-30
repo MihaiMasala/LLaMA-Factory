@@ -1,14 +1,22 @@
 from functools import partial
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Sequence, Tuple
 
 from ..extras.constants import IGNORE_INDEX
 from ..extras.logging import get_logger
+from ..extras.packages import is_pillow_available
 from .utils import Role
 
 
+if is_pillow_available():
+    from PIL import Image
+
+
 if TYPE_CHECKING:
-    from transformers import Seq2SeqTrainingArguments
+    from numpy.typing import NDArray
+    from PIL.Image import Image as ImageObject
+    from transformers import ProcessorMixin, Seq2SeqTrainingArguments
+    from transformers.image_processing_utils import BaseImageProcessor
     from transformers.tokenization_utils import PreTrainedTokenizer
 
     from ..hparams import DataArguments
@@ -16,6 +24,13 @@ if TYPE_CHECKING:
 
 
 logger = get_logger(__name__)
+
+
+def _preprocess_visual_inputs(images: Sequence["ImageObject"], processor: "ProcessorMixin") -> "NDArray":
+    # process visual inputs (currently only supports a single image)
+    image_processor: "BaseImageProcessor" = getattr(processor, "image_processor")
+    image = images[0] if len(images) != 0 else Image.new("RGB", (100, 100), (255, 255, 255))
+    return image_processor(image, return_tensors="pt")["pixel_values"][0]
 
 
 def preprocess_pretrain_dataset(
@@ -48,17 +63,24 @@ def preprocess_pretrain_dataset(
 
 def preprocess_supervised_dataset(
     examples: Dict[str, List[Any]],
-    tokenizer: "PreTrainedTokenizer",
     template: "Template",
+    tokenizer: "PreTrainedTokenizer",
+    processor: Optional["ProcessorMixin"],
     data_args: "DataArguments",
 ) -> Dict[str, List[List[int]]]:
     # build inputs with format `<bos> X Y <eos>` and labels with format `<ignore> ... <ignore> Y <eos>`
     # for multiturn examples, we only mask the prompt part in each prompt-response pair.
     model_inputs = {"input_ids": [], "attention_mask": [], "labels": []}
+    if processor is not None:
+        model_inputs["pixel_values"] = []
+        preprocess_visual_inputs = partial(_preprocess_visual_inputs, processor=processor)
 
     for i in range(len(examples["prompt"])):
         if len(examples["prompt"][i]) % 2 != 1 or len(examples["response"][i]) != 1:
             continue
+
+        if processor is not None:
+            examples["prompt"][i][0]["content"] = "<image>" + examples["prompt"][i][0]["content"]
 
         messages = examples["prompt"][i] + examples["response"][i]
         input_ids, labels = [], []
@@ -89,14 +111,16 @@ def preprocess_supervised_dataset(
         model_inputs["input_ids"].append(input_ids)
         model_inputs["attention_mask"].append([1] * len(input_ids))
         model_inputs["labels"].append(labels)
+        if processor is not None:
+            model_inputs["pixel_values"].append(preprocess_visual_inputs(examples["images"][i]))
 
     return model_inputs
 
 
 def preprocess_packed_supervised_dataset(
     examples: Dict[str, List[Any]],
-    tokenizer: "PreTrainedTokenizer",
     template: "Template",
+    tokenizer: "PreTrainedTokenizer",
     data_args: "DataArguments",
 ) -> Dict[str, List[List[int]]]:
     # build inputs with format `<bos> X1 Y1 <eos> <bos> X2 Y2 <eos>`
@@ -141,16 +165,23 @@ def preprocess_packed_supervised_dataset(
 
 def preprocess_unsupervised_dataset(
     examples: Dict[str, List[Any]],
-    tokenizer: "PreTrainedTokenizer",
     template: "Template",
+    tokenizer: "PreTrainedTokenizer",
+    processor: Optional["ProcessorMixin"],
     data_args: "DataArguments",
 ) -> Dict[str, List[List[int]]]:
     # build inputs with format `<bos> X` and labels with format `Y <eos>`
     model_inputs = {"input_ids": [], "attention_mask": [], "labels": []}
+    if processor is not None:
+        model_inputs["pixel_values"] = []
+        preprocess_visual_inputs = partial(_preprocess_visual_inputs, processor=processor)
 
     for i in range(len(examples["prompt"])):
         if len(examples["prompt"][i]) % 2 != 1:
             continue
+
+        if processor is not None:
+            examples["prompt"][i][0]["content"] = "<image>" + examples["prompt"][i][0]["content"]
 
         if len(examples["response"][i]) == 1:
             messages = examples["prompt"][i] + examples["response"][i]
@@ -172,21 +203,31 @@ def preprocess_unsupervised_dataset(
         model_inputs["input_ids"].append(input_ids)
         model_inputs["attention_mask"].append([1] * len(input_ids))
         model_inputs["labels"].append(labels)
+        if processor is not None:
+            model_inputs["pixel_values"].append(preprocess_visual_inputs(examples["images"][i]))
 
     return model_inputs
 
 
 def preprocess_pairwise_dataset(
     examples: Dict[str, List[Any]],
-    tokenizer: "PreTrainedTokenizer",
     template: "Template",
+    tokenizer: "PreTrainedTokenizer",
+    processor: Optional["ProcessorMixin"],
     data_args: "DataArguments",
 ) -> Dict[str, List[List[int]]]:
     # build input pairs with format `<bos> X`, `Y1 <eos>` and `Y2 <eos>`
     model_inputs = {"prompt_ids": [], "chosen_ids": [], "rejected_ids": []}
+    if processor is not None:
+        model_inputs["pixel_values"] = []
+        preprocess_visual_inputs = partial(_preprocess_visual_inputs, processor=processor)
+
     for i in range(len(examples["prompt"])):
         if len(examples["prompt"][i]) % 2 != 1 or len(examples["response"][i]) < 2:
             continue
+
+        if processor is not None:
+            examples["prompt"][i][0]["content"] = "<image>" + examples["prompt"][i][0]["content"]
 
         chosen_messages = examples["prompt"][i] + [examples["response"][i][0]]
         rejected_messages = examples["prompt"][i] + [examples["response"][i][1]]
@@ -214,6 +255,8 @@ def preprocess_pairwise_dataset(
         model_inputs["prompt_ids"].append(prompt_ids)
         model_inputs["chosen_ids"].append(chosen_ids)
         model_inputs["rejected_ids"].append(rejected_ids)
+        if processor is not None:
+            model_inputs["pixel_values"].append(preprocess_visual_inputs(examples["images"][i]))
 
     return model_inputs
 
@@ -244,34 +287,54 @@ def print_unsupervised_dataset_example(example: Dict[str, List[int]], tokenizer:
 
 
 def get_preprocess_and_print_func(
-    tokenizer: "PreTrainedTokenizer",
-    template: "Template",
     data_args: "DataArguments",
     training_args: "Seq2SeqTrainingArguments",
     stage: Literal["pt", "sft", "rm", "ppo"],
+    template: "Template",
+    tokenizer: "PreTrainedTokenizer",
+    processor: Optional["ProcessorMixin"],
 ) -> Tuple[Callable, Callable]:
     if stage == "pt":
-        preprocess_func = partial(preprocess_pretrain_dataset, tokenizer=tokenizer, data_args=data_args)
+        preprocess_func = partial(
+            preprocess_pretrain_dataset,
+            tokenizer=tokenizer,
+            data_args=data_args,
+        )
         print_function = partial(print_unsupervised_dataset_example, tokenizer=tokenizer)
     elif stage == "sft" and not training_args.predict_with_generate:
         if data_args.packing:
             preprocess_func = partial(
-                preprocess_packed_supervised_dataset, tokenizer=tokenizer, template=template, data_args=data_args
+                preprocess_packed_supervised_dataset,
+                template=template,
+                tokenizer=tokenizer,
+                data_args=data_args,
             )
         else:
             preprocess_func = partial(
-                preprocess_supervised_dataset, tokenizer=tokenizer, template=template, data_args=data_args
+                preprocess_supervised_dataset,
+                template=template,
+                tokenizer=tokenizer,
+                processor=processor,
+                data_args=data_args,
             )
 
         print_function = partial(print_supervised_dataset_example, tokenizer=tokenizer)
     elif stage == "rm":
         preprocess_func = partial(
-            preprocess_pairwise_dataset, tokenizer=tokenizer, template=template, data_args=data_args
+            preprocess_pairwise_dataset,
+            template=template,
+            tokenizer=tokenizer,
+            processor=processor,
+            data_args=data_args,
         )
         print_function = partial(print_pairwise_dataset_example, tokenizer=tokenizer)
     else:
         preprocess_func = partial(
-            preprocess_unsupervised_dataset, tokenizer=tokenizer, template=template, data_args=data_args
+            preprocess_unsupervised_dataset,
+            template=template,
+            tokenizer=tokenizer,
+            processor=processor,
+            data_args=data_args,
         )
         print_function = partial(print_unsupervised_dataset_example, tokenizer=tokenizer)
 
