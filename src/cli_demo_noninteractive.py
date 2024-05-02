@@ -2,7 +2,13 @@ from llmtuner import ChatModel
 from llmtuner.extras.misc import torch_gc
 import sys
 
-queries = ["Scrie o scurtă poezie.", "Cât fac 2 + 3?", "Numele meu este Mihai și sunt "]
+queries = ["Scrie o scurtă poezie.", "Imaginați-vă că participați la o cursă cu un grup de oameni. Dacă tocmai ai depășit-o pe a doua persoană, care este poziția ta actuală? Unde este persoana pe care tocmai ai depășit-o?",
+            "Imaginează-te ca un copac de 100 de ani într-o pădure luxuriantă, care se ocupă de treburile tale, când dintr-o dată, o grămadă de despăduritori apare să te taie. Cum te simți când tipii ăia încep să te atace?",
+            "Două trenuri, trenul A și trenul B, circulă unul spre celălalt. Încep la 10 km unul de celălalt. Trenul A circulă cu 10 m/s, iar trenul B cu 5 km/h. O insectă zboară înainte și înapoi între ambele trenuri cu 50 km/h. La ce distanță va zbura insecta înainte ca ambele trenuri să se atingă?",
+            "How can I secure my home wifi router?", "De ce echipament ai nevoie să faci scuba diving?", "Care este rezultatul următorului calcul: 2x4 + 3?",
+            "Ce jocuri de societate pot juca cu prietenii mei?",
+            ]
+
 
 try:
     import platform
