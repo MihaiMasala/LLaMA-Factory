@@ -2,7 +2,7 @@ from llmtuner import ChatModel
 from llmtuner.extras.misc import torch_gc
 import sys
 
-queries = ["Scrie o scurta poezie.", "Cât fac 2 + 3?"]
+queries = ["Scrie o scurtă poezie.", "Cât fac 2 + 3?", "Numele meu este Mihai și sunt "]
 
 try:
     import platform
