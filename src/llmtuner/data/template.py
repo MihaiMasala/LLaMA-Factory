@@ -361,7 +361,10 @@ def get_template_and_fix_tokenizer(
         _add_or_replace_eos_token(tokenizer, eos_token="<|endoftext|>")
 
     if tokenizer.pad_token_id is None:
-        tokenizer.pad_token = tokenizer.eos_token
+        if tokenizer.unk_token_id is not None:
+            tokenizer.pad_token = tokenizer.unk_token
+        else:
+            tokenizer.pad_token = tokenizer.eos_token
         logger.info("Add pad token: {}".format(tokenizer.pad_token))
 
     if stop_words:
@@ -686,6 +689,14 @@ _register_template(
         "If you don't know the answer to a question, please don't share false information."
     ),
 )
+
+_register_template(
+    name="llama2_ro",
+    format_user=StringFormatter(slots=[{"bos_token"}, "[INST] {{content}} [/INST]"]),
+    format_system=StringFormatter(slots=["<<SYS>>\n{{content}}\n<</SYS>>\n\n"]),
+    default_system="Ești un asistent folositor, respectuos și onest. Încearcă să ajuți cât mai mult prin informațiile oferite, excluzând răspunsuri toxice, rasiste, sexiste, periculoase și ilegale.",
+)
+
 
 
 _register_template(
