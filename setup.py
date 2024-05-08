@@ -20,12 +20,12 @@ def get_requires():
 
 
 extra_require = {
-    "deepspeed": ["deepspeed>=0.10.0"],
     "metrics": ["nltk", "jieba", "rouge-chinese"],
+    "deepspeed": ["deepspeed>=0.10.0,<=0.14.0"],
+    "bitsandbytes": ["bitsandbytes>=0.39.0"],
+    "vllm": ["vllm>=0.4.0"],
     "galore": ["galore-torch"],
     "badam": ["badam"],
-    "vllm": ["vllm>=0.4.0"],
-    "bitsandbytes": ["bitsandbytes>=0.39.0"],
     "gptq": ["optimum>=1.16.0", "auto-gptq>=0.5.0"],
     "awq": ["autoawq"],
     "aqlm": ["aqlm[gpu]>=1.1.0"],
@@ -52,6 +52,7 @@ def main():
         python_requires=">=3.8.0",
         install_requires=get_requires(),
         extras_require=extra_require,
+        entry_points={"console_scripts": ["llamafactory-cli = llmtuner.cli:main"]},
         classifiers=[
             "Development Status :: 4 - Beta",
             "Intended Audience :: Developers",

@@ -24,8 +24,6 @@ IGNORE_INDEX = -100
 
 LAYERNORM_NAMES = {"norm", "ln"}
 
-LOG_FILE_NAME = "trainer_log.jsonl"
-
 METHODS = ["full", "freeze", "lora"]
 
 MLLM_LIST = ["LLaVA1.5"]
@@ -34,9 +32,15 @@ MOD_SUPPORTED_MODELS = ["bloom", "falcon", "gemma", "llama", "mistral", "mixtral
 
 PEFT_METHODS = ["lora"]
 
+RUNNING_LOG = "running_log.txt"
+
 SUBJECTS = ["Average", "STEM", "Social Sciences", "Humanities", "Other"]
 
 SUPPORTED_MODELS = OrderedDict()
+
+TRAINER_CONFIG = "trainer_config.yaml"
+
+TRAINER_LOG = "trainer_log.jsonl"
 
 TRAINING_STAGES = {
     "Supervised Fine-Tuning": "sft",
@@ -320,6 +324,14 @@ register_model_group(
             DownloadSource.DEFAULT: "deepseek-ai/deepseek-moe-16b-chat",
             DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-moe-16b-chat",
         },
+        "DeepSeek-MoE-236B": {
+            DownloadSource.DEFAULT: "deepseek-ai/DeepSeek-V2",
+            DownloadSource.MODELSCOPE: "deepseek-ai/DeepSeek-V2",
+        },
+        "DeepSeek-MoE-236B-Chat": {
+            DownloadSource.DEFAULT: "deepseek-ai/DeepSeek-V2-Chat",
+            DownloadSource.MODELSCOPE: "deepseek-ai/DeepSeek-V2-Chat",
+        },
     },
     template="deepseek",
 )
@@ -564,6 +576,10 @@ register_model_group(
         "LLaMA3-70B-Chat": {
             DownloadSource.DEFAULT: "meta-llama/Meta-Llama-3-70B-Instruct",
             DownloadSource.MODELSCOPE: "LLM-Research/Meta-Llama-3-70B-Instruct",
+        },
+        "LLaMA3-8B-Chinese-Chat": {
+            DownloadSource.DEFAULT: "shenzhi-wang/Llama3-8B-Chinese-Chat",
+            DownloadSource.MODELSCOPE: "LLM-Research/Llama3-8B-Chinese-Chat",
         },
     },
     template="llama3",

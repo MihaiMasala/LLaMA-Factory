@@ -5,13 +5,15 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/hiyouga/LLaMA-Factory)](https://github.com/hiyouga/LLaMA-Factory/commits/main)
 [![PyPI](https://img.shields.io/pypi/v/llmtuner)](https://pypi.org/project/llmtuner/)
 [![Downloads](https://static.pepy.tech/badge/llmtuner)](https://pypi.org/project/llmtuner/)
-[![Citation](https://img.shields.io/badge/citation-34-green)](#projects-using-llama-factory)
+[![Citation](https://img.shields.io/badge/citation-43-green)](#projects-using-llama-factory)
 [![GitHub pull request](https://img.shields.io/badge/PRs-welcome-blue)](https://github.com/hiyouga/LLaMA-Factory/pulls)
 [![Discord](https://dcbadge.vercel.app/api/server/rKfvV9r9FK?compact=true&style=flat)](https://discord.gg/rKfvV9r9FK)
 [![Twitter](https://img.shields.io/twitter/follow/llamafactory_ai)](https://twitter.com/llamafactory_ai)
 [![Spaces](https://img.shields.io/badge/🤗-Open%20in%20Spaces-blue)](https://huggingface.co/spaces/hiyouga/LLaMA-Board)
 [![Studios](https://img.shields.io/badge/ModelScope-Open%20in%20Studios-blue)](https://modelscope.cn/studios/hiyouga/LLaMA-Board)
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1eRTPn37ltBbYsISy9Aw2NuI2Aq5CQrD9?usp=sharing)
+
+[![GitHub Tread](https://trendshift.io/api/badge/repositories/4535)](https://trendshift.io/repositories/4535)
 
 👋 Join our [WeChat](assets/wechat.jpg).
 
@@ -143,7 +145,7 @@ Compared to ChatGLM's [P-Tuning](https://github.com/THUDM/ChatGLM2-6B/tree/main/
 | [BLOOMZ](https://huggingface.co/bigscience)              | 560M/1.1B/1.7B/3B/7.1B/176B      | query_key_value   | -         |
 | [ChatGLM3](https://huggingface.co/THUDM)                 | 6B                               | query_key_value   | chatglm3  |
 | [Command-R](https://huggingface.co/CohereForAI)          | 35B/104B                         | q_proj,v_proj     | cohere    |
-| [DeepSeek (MoE)](https://huggingface.co/deepseek-ai)     | 7B/16B/67B                       | q_proj,v_proj     | deepseek  |
+| [DeepSeek (MoE)](https://huggingface.co/deepseek-ai)     | 7B/16B/67B/236B                  | q_proj,v_proj     | deepseek  |
 | [Falcon](https://huggingface.co/tiiuae)                  | 7B/40B/180B                      | query_key_value   | falcon    |
 | [Gemma/CodeGemma](https://huggingface.co/google)         | 2B/7B                            | q_proj,v_proj     | gemma     |
 | [InternLM2](https://huggingface.co/internlm)             | 7B/20B                           | wqkv              | intern2   |
@@ -205,8 +207,8 @@ You also can add a custom chat template to [template.py](src/llmtuner/data/templ
 - [Stanford Alpaca (en)](https://github.com/tatsu-lab/stanford_alpaca)
 - [Stanford Alpaca (zh)](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
 - [Alpaca GPT4 (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
-- [Self Cognition (zh)](data/self_cognition.json)
-- [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
+- [Identity (en&zh)](data/identity.json)
+- [Open Assistant (zh)](https://huggingface.co/datasets/OpenAssistant/oasst1)
 - [ShareGPT (zh)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT/tree/main/Chinese-instruction-collection)
 - [Guanaco Dataset (multilingual)](https://huggingface.co/datasets/JosephusCheung/GuanacoDataset)
 - [BELLE 2M (zh)](https://huggingface.co/datasets/BelleGroup/train_2M_CN)
@@ -254,11 +256,11 @@ You also can add a custom chat template to [template.py](src/llmtuner/data/templ
 <details><summary>Preference datasets</summary>
 
 - [HH-RLHF (en)](https://huggingface.co/datasets/Anthropic/hh-rlhf)
-- [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
 - [GPT-4 Generated Data (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
 - [Orca DPO (en)](https://huggingface.co/datasets/Intel/orca_dpo_pairs)
 - [Nectar (en)](https://huggingface.co/datasets/berkeley-nest/Nectar)
 - [DPO mixed (en&zh)](https://huggingface.co/datasets/hiyouga/DPO-En-Zh-20k)
+- [Open Assistant (zh)](https://huggingface.co/datasets/OpenAssistant/oasst1)
 - [Orca DPO (de)](https://huggingface.co/datasets/mayflowergmbh/intel_orca_dpo_pairs_de)
 
 </details>
@@ -276,18 +278,19 @@ huggingface-cli login
 | ------------ | ------- | --------- |
 | python       | 3.8     | 3.10      |
 | torch        | 1.13.1  | 2.2.0     |
-| transformers | 4.37.2  | 4.39.3    |
-| datasets     | 2.14.3  | 2.18.0    |
-| accelerate   | 0.27.2  | 0.28.0    |
+| transformers | 4.37.2  | 4.40.1    |
+| datasets     | 2.14.3  | 2.19.1    |
+| accelerate   | 0.27.2  | 0.30.0    |
 | peft         | 0.9.0   | 0.10.0    |
-| trl          | 0.8.1   | 0.8.1     |
+| trl          | 0.8.1   | 0.8.6     |
 
 | Optional     | Minimum | Recommend |
 | ------------ | ------- | --------- |
 | CUDA         | 11.6    | 12.2      |
 | deepspeed    | 0.10.0  | 0.14.0    |
-| bitsandbytes | 0.39.0  | 0.43.0    |
-| flash-attn   | 2.3.0   | 2.5.6     |
+| bitsandbytes | 0.39.0  | 0.43.1    |
+| vllm         | 0.4.0   | 0.4.2     |
+| flash-attn   | 2.3.0   | 2.5.8     |
 
 ### Hardware Requirement
 
@@ -305,24 +308,15 @@ huggingface-cli login
 
 ## Getting Started
 
-### Data Preparation
-
-Please refer to [data/README.md](data/README.md) for checking the details about the format of dataset files. You can either use datasets on HuggingFace / ModelScope hub or load the dataset in local disk.
-
-> [!NOTE]
-> Please update `data/dataset_info.json` to use your custom dataset.
-
-### Dependence Installation
+### Installation
 
 ```bash
 git clone https://github.com/hiyouga/LLaMA-Factory.git
-conda create -n llama_factory python=3.10
-conda activate llama_factory
 cd LLaMA-Factory
 pip install -e .[metrics]
 ```
 
-Extra dependencies available: deepspeed, metrics, galore, badam, vllm, bitsandbytes, gptq, awq, aqlm, qwen, modelscope, quality
+Extra dependencies available: metrics, deepspeed, bitsandbytes, vllm, galore, badam, gptq, awq, aqlm, qwen, modelscope, quality
 
 <details><summary>For Windows users</summary>
 
@@ -336,17 +330,37 @@ To enable FlashAttention-2 on the Windows platform, you need to install the prec
 
 </details>
 
-### Train with LLaMA Board GUI (powered by [Gradio](https://github.com/gradio-app/gradio))
+### Data Preparation
+
+Please refer to [data/README.md](data/README.md) for checking the details about the format of dataset files. You can either use datasets on HuggingFace / ModelScope hub or load the dataset in local disk.
+
+> [!NOTE]
+> Please update `data/dataset_info.json` to use your custom dataset.
+
+### Quickstart
+
+Use the following 3 commands to run LoRA **fine-tuning**, **inference** and **merging** of the Llama3-8B-Instruct model, respectively.
+
+```bash
+CUDA_VISIBLE_DEVICES=0 llamafactory-cli train examples/lora_single_gpu/llama3_lora_sft.yaml
+CUDA_VISIBLE_DEVICES=0 llamafactory-cli chat examples/inference/llama3_lora_sft.yaml
+CUDA_VISIBLE_DEVICES=0 llamafactory-cli export examples/merge_lora/llama3_lora_sft.yaml
+```
+
+See [examples/README.md](examples/README.md) for advanced usage (including distributed training).
+
+> [!TIP]
+> Use `llamafactory-cli help` to show help information.
+
+### Fine-Tuning with LLaMA Board GUI (powered by [Gradio](https://github.com/gradio-app/gradio))
 
 > [!IMPORTANT]
-> LLaMA Board GUI only supports training on a single GPU, please use [CLI](#command-line-interface) for distributed training.
+> LLaMA Board GUI only supports training on a single GPU.
 
 #### Use local environment
 
 ```bash
-export CUDA_VISIBLE_DEVICES=0 # `set CUDA_VISIBLE_DEVICES=0` for Windows
-export GRADIO_SERVER_PORT=7860 # `set GRADIO_SERVER_PORT=7860` for Windows
-python src/train_web.py # or python -m llmtuner.webui.interface
+CUDA_VISIBLE_DEVICES=0 GRADIO_SHARE=1 llamafactory-cli webui
 ```
 
 <details><summary>For Alibaba Cloud users</summary>
@@ -388,20 +402,10 @@ docker compose -f ./docker-compose.yml up -d
 
 </details>
 
-### Train with Command Line Interface
-
-See [examples/README.md](examples/README.md) for usage.
-
-Use `python src/train_bash.py -h` to display arguments description.
-
 ### Deploy with OpenAI-style API and vLLM
 
 ```bash
-CUDA_VISIBLE_DEVICES=0,1 API_PORT=8000 python src/api_demo.py \
-    --model_name_or_path meta-llama/Meta-Llama-3-8B-Instruct \
-    --template llama3 \
-    --infer_backend vllm \
-    --vllm_enforce_eager
+CUDA_VISIBLE_DEVICES=0,1 API_PORT=8000 llamafactory-cli api examples/inference/llama3_vllm.yaml
 ```
 
 ### Download from ModelScope Hub
@@ -441,6 +445,7 @@ If you have a project that should be incorporated, please contact via email or c
 1. Huang et al. Key-Point-Driven Data Synthesis with its Enhancement on Mathematical Reasoning. 2024. [[arxiv]](https://arxiv.org/abs/2403.02333)
 1. Duan et al. Negating Negatives: Alignment without Human Positive Samples via Distributional Dispreference Optimization. 2024. [[arxiv]](https://arxiv.org/abs/2403.03419)
 1. Xie and Schwertfeger. Empowering Robotics with Large Language Models: osmAG Map Comprehension with LLMs. 2024. [[arxiv]](https://arxiv.org/abs/2403.08228)
+1. Wu et al. Large Language Models are Parallel Multilingual Learners. 2024. [[arxiv]](https://arxiv.org/abs/2403.09073)
 1. Zhang et al. EDT: Improving Large Language Models' Generation by Entropy-based Dynamic Temperature Sampling. 2024. [[arxiv]](https://arxiv.org/abs/2403.14541)
 1. Weller et al. FollowIR: Evaluating and Teaching Information Retrieval Models to Follow Instructions. 2024. [[arxiv]](https://arxiv.org/abs/2403.15246)
 1. Hongbin Na. CBT-LLM: A Chinese Large Language Model for Cognitive Behavioral Therapy-based Mental Health Question Answering. 2024. [[arxiv]](https://arxiv.org/abs/2403.16008)
@@ -448,12 +453,20 @@ If you have a project that should be incorporated, please contact via email or c
 1. Liu et al. Extensive Self-Contrast Enables Feedback-Free Language Model Alignment. 2024. [[arxiv]](https://arxiv.org/abs/2404.00604)
 1. Luo et al. BAdam: A Memory Efficient Full Parameter Training Method for Large Language Models. 2024. [[arxiv]](https://arxiv.org/abs/2404.02827)
 1. Du et al. Chinese Tiny LLM: Pretraining a Chinese-Centric Large Language Model. 2024. [[arxiv]](https://arxiv.org/abs/2404.04167)
+1. Ma et al. Parameter Efficient Quasi-Orthogonal Fine-Tuning via Givens Rotation. 2024. [[arxiv]](https://arxiv.org/abs/2404.04316)
 1. Liu et al. Dynamic Generation of Personalities with Large Language Models. 2024. [[arxiv]](https://arxiv.org/abs/2404.07084)
+1. Shang et al. How Far Have We Gone in Stripped Binary Code Understanding Using Large Language Models. 2024. [[arxiv]](https://arxiv.org/abs/2404.09836)
+1. Huang et al. LLMTune: Accelerate Database Knob Tuning with Large Language Models. 2024. [[arxiv]](https://arxiv.org/abs/2404.11581)
+1. Deng et al. Text-Tuple-Table: Towards Information Integration in Text-to-Table Generation via Global Tuple Extraction. 2024. [[arxiv]](https://arxiv.org/abs/2404.14215)
+1. Acikgoz et al. Hippocrates: An Open-Source Framework for Advancing Large Language Models in Healthcare. 2024. [[arxiv]](https://arxiv.org/abs/2404.16621)
+1. Zhang et al. Small Language Models Need Strong Verifiers to Self-Correct Reasoning. 2024. [[arxiv]](https://arxiv.org/abs/2404.17140)
+1. Zhou et al. FREB-TQA: A Fine-Grained Robustness Evaluation Benchmark for Table Question Answering. 2024. [[arxiv]](https://arxiv.org/abs/2404.18585)
 1. **[StarWhisper](https://github.com/Yu-Yang-Li/StarWhisper)**: A large language model for Astronomy, based on ChatGLM2-6B and Qwen-14B.
 1. **[DISC-LawLLM](https://github.com/FudanDISC/DISC-LawLLM)**: A large language model specialized in Chinese legal domain, based on Baichuan-13B, is capable of retrieving and reasoning on legal knowledge.
 1. **[Sunsimiao](https://github.com/thomas-yanxin/Sunsimiao)**: A large language model specialized in Chinese medical domain, based on Baichuan-7B and ChatGLM-6B.
 1. **[CareGPT](https://github.com/WangRongsheng/CareGPT)**: A series of large language models for Chinese medical domain, based on LLaMA2-7B and Baichuan-13B.
 1. **[MachineMindset](https://github.com/PKU-YuanGroup/Machine-Mindset/)**: A series of MBTI Personality large language models, capable of giving any LLM 16 different personality types based on different datasets and training methods.
+1. **[Luminia-13B-v3](https://huggingface.co/Nekochu/Luminia-13B-v3)**: A large language model specialized in generate metadata for stable diffusion. [[🤗Demo]](https://huggingface.co/spaces/Nekochu/Luminia-13B_SD_Prompt)
 
 </details>
 

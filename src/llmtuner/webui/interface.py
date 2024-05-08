@@ -1,3 +1,5 @@
+import os
+
 from ..extras.packages import is_gradio_available
 from .common import save_config
 from .components import (
@@ -68,5 +70,15 @@ def create_web_demo() -> gr.Blocks:
     return demo
 
 
-if __name__ == "__main__":
-    create_ui().queue().launch(server_name="0.0.0.0", server_port=None, share=False, inbrowser=True)
+def run_web_ui() -> None:
+    server_name = os.environ.get("GRADIO_SERVER_NAME", "0.0.0.0")
+    server_port = int(os.environ.get("GRADIO_SERVER_PORT", "7860"))
+    gradio_share = bool(int(os.environ.get("GRADIO_SHARE", "0")))
+    create_ui().queue().launch(share=gradio_share, server_name=server_name, server_port=server_port)
+
+
+def run_web_demo() -> None:
+    server_name = os.environ.get("GRADIO_SERVER_NAME", "0.0.0.0")
+    server_port = int(os.environ.get("GRADIO_SERVER_PORT", "7860"))
+    gradio_share = bool(int(os.environ.get("GRADIO_SHARE", "0")))
+    create_web_demo().queue().launch(share=gradio_share, server_name=server_name, server_port=server_port)

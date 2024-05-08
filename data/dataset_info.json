@@ -95,17 +95,7 @@
   },
   "identity": {
     "file_name": "identity.json",
-    "file_sha1": "ffe3ecb58ab642da33fbb514d5e6188f1469ad40"
-  },
-  "oaast_sft": {
-    "file_name": "oaast_sft.json",
-    "file_sha1": "7baf5d43e67a91f9bbdf4e400dbe033b87e9757e",
-    "columns": {
-      "prompt": "instruction",
-      "query": "input",
-      "response": "output",
-      "history": "history"
-    }
+    "file_sha1": "0f67e97fd01612006ab3536cdaf6cfb0d1e7f279"
   },
   "oaast_sft_zh": {
     "file_name": "oaast_sft_zh.json",
@@ -252,7 +242,7 @@
     "ms_hub_url": "AI-ModelScope/webnovel_cn"
   },
   "nectar_sft": {
-    "hf_hub_url": "mlinmg/SFT-Nectar",
+    "hf_hub_url": "AstraMindAI/SFT-Nectar",
     "ms_hub_url": "AI-ModelScope/SFT-Nectar"
   },
   "deepctrl": {
@@ -394,17 +384,6 @@
     },
     "ranking": true
   },
-  "oaast_rm": {
-    "file_name": "oaast_rm.json",
-    "file_sha1": "622d420e9b70003b210618253bd3d9d2891d86cb",
-    "columns": {
-      "prompt": "instruction",
-      "query": "input",
-      "response": "output",
-      "history": "history"
-    },
-    "ranking": true
-  },
   "oaast_rm_zh": {
     "file_name": "oaast_rm_zh.json",
     "file_sha1": "1065af1f3784dd61be5e79713a35f427b713a232",
@@ -437,7 +416,7 @@
     }
   },
   "nectar_rm": {
-    "hf_hub_url": "mlinmg/RLAIF-Nectar",
+    "hf_hub_url": "AstraMindAI/RLAIF-Nectar",
     "ms_hub_url": "AI-ModelScope/RLAIF-Nectar",
     "ranking": true
   },
