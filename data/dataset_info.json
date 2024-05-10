@@ -76,6 +76,15 @@
     }
   },
 
+  "ro_dpo_helpsteer":{
+    "file_name": "ro_dpo_helpsteer.json",
+    "ranking": "true",
+    "columns": {
+      "prompt": "prompt",
+      "response": "output"
+    }
+  },
+
 
   "alpaca_en": {
     "file_name": "alpaca_data_en_52k.json",
