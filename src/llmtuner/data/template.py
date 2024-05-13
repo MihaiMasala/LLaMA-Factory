@@ -733,6 +733,31 @@ _register_template(
     replace_eos=True,
 )
 
+_register_template(
+    name="llama3_ro",
+    format_user=StringFormatter(
+        slots=[
+            (
+                "<|start_header_id|>user<|end_header_id|>\n\n{{content}}<|eot_id|>"
+                "<|start_header_id|>assistant<|end_header_id|>\n\n"
+            )
+        ]
+    ),
+    format_system=StringFormatter(
+        slots=[{"bos_token"}, "<|start_header_id|>system<|end_header_id|>\n\n{{content}}<|eot_id|>"]
+    ),
+    format_observation=StringFormatter(
+        slots=[
+            (
+                "<|start_header_id|>tool<|end_header_id|>\n\n{{content}}<|eot_id|>"
+                "<|start_header_id|>assistant<|end_header_id|>\n\n"
+            )
+        ]
+    ),
+    default_system="Ești un asistent folositor, respectuos și onest. Încearcă să ajuți cât mai mult prin informațiile oferite, excluzând răspunsuri toxice, rasiste, sexiste, periculoase și ilegale.",
+    stop_words=["<|eot_id|>"],
+    replace_eos=True,
+)
 
 _register_template(
     name="mistral",
