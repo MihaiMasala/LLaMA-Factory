@@ -1,4 +1,4 @@
-from llmtuner import ChatModel
+from llmtuner.chat import ChatModel
 from llmtuner.extras.misc import torch_gc
 import sys
 
@@ -61,7 +61,6 @@ def main():
         print()
         print("#"*80)
         messages.append({"role": "assistant", "content": response})
-
 
 if __name__ == "__main__":
     main()
