@@ -6,7 +6,7 @@ from typing_extensions import Annotated
 
 from ..chat import ChatModel
 from ..extras.misc import torch_gc
-from ..extras.packages import is_fastapi_availble, is_starlette_available, is_uvicorn_available
+from ..extras.packages import is_fastapi_available, is_starlette_available, is_uvicorn_available
 from .chat import (
     create_chat_completion_response,
     create_score_evaluation_response,
@@ -22,7 +22,7 @@ from .protocol import (
 )
 
 
-if is_fastapi_availble():
+if is_fastapi_available():
     from fastapi import Depends, FastAPI, HTTPException, status
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.security.http import HTTPAuthorizationCredentials, HTTPBearer
@@ -51,7 +51,7 @@ def create_app(chat_model: "ChatModel") -> "FastAPI":
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    api_key = os.environ.get("API_KEY", None)
+    api_key = os.environ.get("API_KEY")
     security = HTTPBearer(auto_error=False)
 
     async def verify_api_key(auth: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security)]):

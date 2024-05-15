@@ -26,8 +26,6 @@ LAYERNORM_NAMES = {"norm", "ln"}
 
 METHODS = ["full", "freeze", "lora"]
 
-MLLM_LIST = ["LLaVA1.5"]
-
 MOD_SUPPORTED_MODELS = ["bloom", "falcon", "gemma", "llama", "mistral", "mixtral", "phi", "starcoder2"]
 
 PEFT_METHODS = ["lora"]
@@ -59,6 +57,8 @@ V_HEAD_WEIGHTS_NAME = "value_head.bin"
 
 V_HEAD_SAFE_WEIGHTS_NAME = "value_head.safetensors"
 
+VISION_MODELS = set()
+
 
 class DownloadSource(str, Enum):
     DEFAULT = "hf"
@@ -69,6 +69,7 @@ def register_model_group(
     models: Dict[str, Dict[DownloadSource, str]],
     module: Optional[str] = None,
     template: Optional[str] = None,
+    vision: bool = False,
 ) -> None:
     prefix = None
     for name, path in models.items():
@@ -81,6 +82,8 @@ def register_model_group(
         DEFAULT_MODULE[prefix] = module
     if template is not None:
         DEFAULT_TEMPLATE[prefix] = template
+    if vision:
+        VISION_MODELS.add(prefix)
 
 
 register_model_group(
@@ -320,13 +323,13 @@ register_model_group(
             DownloadSource.DEFAULT: "deepseek-ai/deepseek-moe-16b-base",
             DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-moe-16b-base",
         },
+        "DeepSeek-MoE-236B-Base": {
+            DownloadSource.DEFAULT: "deepseek-ai/DeepSeek-V2",
+            DownloadSource.MODELSCOPE: "deepseek-ai/DeepSeek-V2",
+        },
         "DeepSeek-MoE-16B-Chat": {
             DownloadSource.DEFAULT: "deepseek-ai/deepseek-moe-16b-chat",
             DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-moe-16b-chat",
-        },
-        "DeepSeek-MoE-236B": {
-            DownloadSource.DEFAULT: "deepseek-ai/DeepSeek-V2",
-            DownloadSource.MODELSCOPE: "deepseek-ai/DeepSeek-V2",
         },
         "DeepSeek-MoE-236B-Chat": {
             DownloadSource.DEFAULT: "deepseek-ai/DeepSeek-V2-Chat",
@@ -424,13 +427,13 @@ register_model_group(
 register_model_group(
     models={
         "CodeGemma-2B": {
-            DownloadSource.DEFAULT: "google/codegemma-2b",
+            DownloadSource.DEFAULT: "google/codegemma-1.1-2b",
         },
         "CodeGemma-7B": {
             DownloadSource.DEFAULT: "google/codegemma-7b",
         },
         "CodeGemma-7B-Chat": {
-            DownloadSource.DEFAULT: "google/codegemma-7b-it",
+            DownloadSource.DEFAULT: "google/codegemma-1.1-7b-it",
             DownloadSource.MODELSCOPE: "AI-ModelScope/codegemma-7b-it",
         },
     },
@@ -581,6 +584,9 @@ register_model_group(
             DownloadSource.DEFAULT: "shenzhi-wang/Llama3-8B-Chinese-Chat",
             DownloadSource.MODELSCOPE: "LLM-Research/Llama3-8B-Chinese-Chat",
         },
+        "LLaMA3-70B-Chinese-Chat": {
+            DownloadSource.DEFAULT: "shenzhi-wang/Llama3-70B-Chinese-Chat",
+        },
     },
     template="llama3",
 )
@@ -596,6 +602,7 @@ register_model_group(
         },
     },
     template="vicuna",
+    vision=True,
 )
 
 
@@ -1174,8 +1181,46 @@ register_model_group(
             DownloadSource.DEFAULT: "01-ai/Yi-34B-Chat-4bits",
             DownloadSource.MODELSCOPE: "01ai/Yi-34B-Chat-4bits",
         },
+        "Yi-1.5-6B": {
+            DownloadSource.DEFAULT: "01-ai/Yi-1.5-6B",
+            DownloadSource.MODELSCOPE: "01ai/Yi-1.5-6B",
+        },
+        "Yi-1.5-9B": {
+            DownloadSource.DEFAULT: "01-ai/Yi-1.5-9B",
+            DownloadSource.MODELSCOPE: "01ai/Yi-1.5-9B",
+        },
+        "Yi-1.5-34B": {
+            DownloadSource.DEFAULT: "01-ai/Yi-1.5-34B",
+            DownloadSource.MODELSCOPE: "01ai/Yi-1.5-34B",
+        },
+        "Yi-1.5-6B-Chat": {
+            DownloadSource.DEFAULT: "01-ai/Yi-1.5-6B-Chat",
+            DownloadSource.MODELSCOPE: "01ai/Yi-1.5-6B-Chat",
+        },
+        "Yi-1.5-9B-Chat": {
+            DownloadSource.DEFAULT: "01-ai/Yi-1.5-9B-Chat",
+            DownloadSource.MODELSCOPE: "01ai/Yi-1.5-9B-Chat",
+        },
+        "Yi-1.5-34B-Chat": {
+            DownloadSource.DEFAULT: "01-ai/Yi-1.5-34B-Chat",
+            DownloadSource.MODELSCOPE: "01ai/Yi-1.5-34B-Chat",
+        },
     },
     template="yi",
+)
+
+
+register_model_group(
+    models={
+        "YiVL-6B-Chat": {
+            DownloadSource.DEFAULT: "BUAADreamer/Yi-VL-6B-hf",
+        },
+        "YiVL-34B-Chat": {
+            DownloadSource.DEFAULT: "BUAADreamer/Yi-VL-34B-hf",
+        },
+    },
+    template="yi_vl",
+    vision=True,
 )
 
 

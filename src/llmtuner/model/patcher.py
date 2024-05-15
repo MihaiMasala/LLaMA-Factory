@@ -1,10 +1,12 @@
+import os
 from types import MethodType
 from typing import TYPE_CHECKING, Any, Dict
 
 import torch
 from peft import PeftModel
-from transformers import PreTrainedModel, PreTrainedTokenizerBase
+from transformers import PreTrainedModel, PreTrainedTokenizerBase, is_torch_npu_available
 from transformers.integrations import is_deepspeed_zero3_enabled
+from transformers.modeling_utils import is_fsdp_enabled
 
 from ..extras.logging import get_logger
 from ..extras.misc import infer_optim_dtype
@@ -16,7 +18,7 @@ from .utils.moe import add_z3_leaf_module, configure_moe
 from .utils.quantization import configure_quantization
 from .utils.rope import configure_rope
 from .utils.valuehead import prepare_valuehead_model
-from .utils.visual import autocast_projector_dtype, configure_hidden_size
+from .utils.visual import autocast_projector_dtype, configure_visual_model
 
 
 if TYPE_CHECKING:
@@ -44,19 +46,23 @@ def patch_config(
     if model_args.compute_dtype is None:  # priority: bf16 > fp16 > fp32
         model_args.compute_dtype = infer_optim_dtype(model_dtype=getattr(config, "torch_dtype", None))
 
+    if is_torch_npu_available():
+        use_jit_compile = os.environ.get("JIT_COMPILE", "0").lower() in ["true", "1"]
+        torch.npu.set_compile_mode(jit_compile=use_jit_compile)
+
     configure_attn_implementation(config, model_args)
     configure_rope(config, model_args, is_trainable)
     configure_longlora(config, model_args, is_trainable)
     configure_quantization(config, tokenizer, model_args, init_kwargs)
     configure_moe(config, model_args, is_trainable)
-    configure_hidden_size(config)
+    configure_visual_model(config)
 
     if model_args.use_cache and not is_trainable:
         setattr(config, "use_cache", True)
         logger.info("Using KV cache for faster generation.")
 
     if getattr(config, "model_type", None) == "qwen":
-        setattr(config, "use_flash_attn", model_args.flash_attn)
+        setattr(config, "use_flash_attn", model_args.flash_attn == "fa2")
         for dtype_name, dtype in [("fp16", torch.float16), ("bf16", torch.bfloat16), ("fp32", torch.float32)]:
             setattr(config, dtype_name, model_args.compute_dtype == dtype)
 
@@ -64,7 +70,7 @@ def patch_config(
         setattr(config, "use_cache", False)  # qwen2 does not support use_cache when using flashattn
 
     init_kwargs["torch_dtype"] = model_args.compute_dtype
-    if not is_deepspeed_zero3_enabled():
+    if not is_deepspeed_zero3_enabled() and not is_fsdp_enabled():
         init_kwargs["low_cpu_mem_usage"] = model_args.low_cpu_mem_usage
         if init_kwargs["low_cpu_mem_usage"]:
             if "device_map" not in init_kwargs and model_args.device_map:

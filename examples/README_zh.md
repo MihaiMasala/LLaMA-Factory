@@ -7,6 +7,7 @@
 - [单 GPU LoRA 微调](#单-gpu-lora-微调)
 - [单 GPU QLoRA 微调](#单-gpu-qlora-微调)
 - [多 GPU LoRA 微调](#多-gpu-lora-微调)
+- [多 NPU LoRA 微调](#多-npu-lora-微调)
 - [多 GPU 全参数微调](#多-gpu-全参数微调)
 - [合并 LoRA 适配器与模型量化](#合并-lora-适配器与模型量化)
 - [推理 LoRA 模型](#推理-lora-模型)
@@ -26,6 +27,12 @@ CUDA_VISIBLE_DEVICES=0 llamafactory-cli train examples/lora_single_gpu/llama3_lo
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 llamafactory-cli train examples/lora_single_gpu/llama3_lora_sft.yaml
+```
+
+#### 多模态指令监督微调
+
+```bash
+CUDA_VISIBLE_DEVICES=0 llamafactory-cli train examples/lora_single_gpu/llava1_5_lora_sft.yaml
 ```
 
 #### 奖励模型训练
@@ -50,12 +57,6 @@ CUDA_VISIBLE_DEVICES=0 llamafactory-cli train examples/lora_single_gpu/llama3_lo
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 llamafactory-cli train examples/lora_single_gpu/llama3_lora_orpo.yaml
-```
-
-#### 多模态指令监督微调
-
-```bash
-CUDA_VISIBLE_DEVICES=0 llamafactory-cli train examples/lora_single_gpu/llava1_5_lora_sft.yaml
 ```
 
 #### 预处理数据集
@@ -122,6 +123,14 @@ bash examples/lora_multi_gpu/multi_node.sh
 
 ```bash
 bash examples/lora_multi_gpu/ds_zero3.sh
+```
+
+### 多 NPU LoRA 微调
+
+#### 使用 DeepSpeed ZeRO-0 训练
+
+```bash
+bash examples/lora_multi_npu/ds_zero0.sh
 ```
 
 ### 多 GPU 全参数微调

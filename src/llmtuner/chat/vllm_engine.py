@@ -2,9 +2,11 @@ import uuid
 from typing import TYPE_CHECKING, AsyncGenerator, AsyncIterator, Dict, List, Optional, Sequence
 
 from ..data import get_template_and_fix_tokenizer
+from ..extras.logging import get_logger
 from ..extras.misc import get_device_count, infer_optim_dtype
 from ..extras.packages import is_vllm_available
 from ..model import load_config, load_tokenizer
+from ..model.utils.visual import LlavaMultiModalProjectorForYiVLForVLLM
 from .base_engine import BaseEngine, Response
 
 
@@ -20,6 +22,9 @@ if TYPE_CHECKING:
     from transformers.image_processing_utils import BaseImageProcessor
 
     from ..hparams import DataArguments, FinetuningArguments, GeneratingArguments, ModelArguments
+
+
+logger = get_logger(__name__)
 
 
 class VllmEngine(BaseEngine):
@@ -57,13 +62,19 @@ class VllmEngine(BaseEngine):
         }
 
         if model_args.visual_inputs:
-            # TODO: auto derive from config
-            # https://github.com/vllm-project/vllm/pull/3042#issuecomment-1984893549
-            self.image_feature_size = 576
+            image_size = config.vision_config.image_size
+            patch_size = config.vision_config.patch_size
+            self.image_feature_size = (image_size // patch_size) ** 2
             engine_args["image_input_type"] = "pixel_values"
             engine_args["image_token_id"] = self.tokenizer.convert_tokens_to_ids("<image>")
-            engine_args["image_input_shape"] = "1,3,336,336"
+            engine_args["image_input_shape"] = "1,3,{},{}".format(image_size, image_size)
             engine_args["image_feature_size"] = self.image_feature_size
+            if getattr(config, "is_yi_vl_derived_model", None):
+                # bug in vllm 0.4.2, see: https://github.com/vllm-project/vllm/pull/4828
+                import vllm.model_executor.models.llava
+
+                logger.info("Detected Yi-VL model, applying projector patch.")
+                vllm.model_executor.models.llava.LlavaMultiModalProjector = LlavaMultiModalProjectorForYiVLForVLLM
 
         self.model = AsyncLLMEngine.from_engine_args(AsyncEngineArgs(**engine_args))
         if model_args.adapter_name_or_path is not None:
@@ -89,43 +100,35 @@ class VllmEngine(BaseEngine):
         )
         prompt_length = len(prompt_ids)
 
-        temperature = input_kwargs.pop("temperature", None)
-        top_p = input_kwargs.pop("top_p", None)
-        top_k = input_kwargs.pop("top_k", None)
-        num_return_sequences = input_kwargs.pop("num_return_sequences", None)
-        repetition_penalty = input_kwargs.pop("repetition_penalty", None)
+        use_beam_search = self.generating_args["num_beams"] > 1
+        temperature = input_kwargs.pop("temperature", self.generating_args["temperature"])
+        top_p = input_kwargs.pop("top_p", self.generating_args["top_p"])
+        top_k = input_kwargs.pop("top_k", self.generating_args["top_k"])
+        num_return_sequences = input_kwargs.pop("num_return_sequences", 1)
+        repetition_penalty = input_kwargs.pop("repetition_penalty", self.generating_args["repetition_penalty"])
+        length_penalty = input_kwargs.pop("length_penalty", self.generating_args["length_penalty"])
         max_length = input_kwargs.pop("max_length", None)
         max_new_tokens = input_kwargs.pop("max_new_tokens", None)
         stop = input_kwargs.pop("stop", None)
 
-        generating_args = self.generating_args.copy()
-        generating_args.update(
-            dict(
-                temperature=temperature or generating_args["temperature"],
-                top_p=top_p or generating_args["top_p"],
-                top_k=top_k or generating_args["top_k"],
-                num_return_sequences=num_return_sequences or 1,
-                repetition_penalty=repetition_penalty or generating_args["repetition_penalty"],
-            )
-        )
-
+        max_tokens = self.generating_args["max_new_tokens"] or self.generating_args["max_length"]
         if max_length:
-            generating_args["max_new_tokens"] = max_length - prompt_length
+            max_tokens = max_length - prompt_length if max_length > prompt_length else 1
 
         if max_new_tokens:
-            generating_args["max_new_tokens"] = max_new_tokens
+            max_tokens = max_new_tokens
 
         sampling_params = SamplingParams(
-            n=generating_args["num_return_sequences"],
-            repetition_penalty=generating_args["repetition_penalty"],
-            temperature=generating_args["temperature"],
-            top_p=generating_args["top_p"],
-            top_k=generating_args["top_k"],
-            use_beam_search=generating_args["num_beams"] > 1,
-            length_penalty=generating_args["length_penalty"],
+            n=num_return_sequences,
+            repetition_penalty=repetition_penalty,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            use_beam_search=use_beam_search,
+            length_penalty=length_penalty,
             stop=stop,
             stop_token_ids=[self.tokenizer.eos_token_id] + self.tokenizer.additional_special_tokens_ids,
-            max_tokens=generating_args["max_new_tokens"],
+            max_tokens=max_tokens,
             skip_special_tokens=True,
         )
 

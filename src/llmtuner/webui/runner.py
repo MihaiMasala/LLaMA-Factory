@@ -107,6 +107,7 @@ class Runner:
             model_name_or_path=get("top.model_path"),
             adapter_name_or_path=adapter_name_or_path,
             cache_dir=user_config.get("cache_dir", None),
+            preprocessing_num_workers=16,
             finetuning_type=get("top.finetuning_type"),
             quantization_bit=int(get("top.quantization_bit")) if get("top.quantization_bit") in ["8", "4"] else None,
             template=get("top.template"),
@@ -141,11 +142,13 @@ class Runner:
             fp16=(get("train.compute_type") == "fp16"),
             bf16=(get("train.compute_type") == "bf16"),
             pure_bf16=(get("train.compute_type") == "pure_bf16"),
+            plot_loss=True,
         )
 
         if args["finetuning_type"] == "freeze":
-            args["num_layer_trainable"] = get("train.num_layer_trainable")
-            args["name_module_trainable"] = get("train.name_module_trainable")
+            args["freeze_trainable_layers"] = get("train.freeze_trainable_layers")
+            args["freeze_trainable_modules"] = get("train.freeze_trainable_modules")
+            args["freeze_extra_modules"] = get("train.freeze_extra_modules") or None
         elif args["finetuning_type"] == "lora":
             args["lora_rank"] = get("train.lora_rank")
             args["lora_alpha"] = get("train.lora_alpha")
@@ -214,6 +217,7 @@ class Runner:
             model_name_or_path=get("top.model_path"),
             adapter_name_or_path=adapter_name_or_path,
             cache_dir=user_config.get("cache_dir", None),
+            preprocessing_num_workers=16,
             finetuning_type=get("top.finetuning_type"),
             quantization_bit=int(get("top.quantization_bit")) if get("top.quantization_bit") in ["8", "4"] else None,
             template=get("top.template"),

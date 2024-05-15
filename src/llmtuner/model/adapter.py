@@ -1,8 +1,10 @@
+import re
 from typing import TYPE_CHECKING
 
 import torch
 from peft import LoraConfig, LoraModel, PeftModel, TaskType, get_peft_model
-from transformers.integrations import is_deepspeed_zero3_enabled
+from transformers.integrations import deepspeed_config, is_deepspeed_zero3_enabled
+from transformers.modeling_utils import is_fsdp_enabled
 
 from ..extras.logging import get_logger
 from .utils.misc import find_all_linear_modules, find_expanded_modules
@@ -41,9 +43,16 @@ def init_adapter(
     if finetuning_args.finetuning_type != "lora" and getattr(model, "quantization_method", None):
         raise ValueError("You can only use lora for quantized models.")
 
+    if deepspeed_config() is not None or is_fsdp_enabled() or finetuning_args.pure_bf16 or finetuning_args.use_badam:
+        logger.info("DeepSpeed/FSDP/PureBF16/BAdam detected, remaining trainable params in half precision.")
+        cast_trainable_params_to_fp32 = False
+    else:
+        logger.info("Upcasting trainable params to float32.")
+        cast_trainable_params_to_fp32 = True
+
     if finetuning_args.finetuning_type == "full" and is_trainable:
         logger.info("Fine-tuning method: Full")
-        if (not finetuning_args.pure_bf16) and (not finetuning_args.use_badam):
+        if cast_trainable_params_to_fp32:
             model = model.float()
 
         if model_args.visual_inputs and hasattr(model, "vision_tower"):  # freeze vision model
@@ -60,40 +69,55 @@ def init_adapter(
             raise ValueError("Current model does not support freeze tuning.")
 
         if finetuning_args.use_llama_pro:
-            if num_layers % finetuning_args.num_layer_trainable != 0:
+            if num_layers % finetuning_args.freeze_trainable_layers != 0:
                 raise ValueError(
                     "`num_layers` {} should be divisible by `num_layer_trainable` {}.".format(
-                        num_layers, finetuning_args.num_layer_trainable
+                        num_layers, finetuning_args.freeze_trainable_layers
                     )
                 )
 
-            stride = num_layers // finetuning_args.num_layer_trainable
+            stride = num_layers // finetuning_args.freeze_trainable_layers
             trainable_layer_ids = range(stride - 1, num_layers + stride - 1, stride)
-        elif finetuning_args.num_layer_trainable > 0:  # fine-tuning the last n layers if num_layer_trainable > 0
-            trainable_layer_ids = range(num_layers - finetuning_args.num_layer_trainable, num_layers)
+        elif finetuning_args.freeze_trainable_layers > 0:  # fine-tuning the last n layers if num_layer_trainable > 0
+            trainable_layer_ids = range(max(0, num_layers - finetuning_args.freeze_trainable_layers), num_layers)
         else:  # fine-tuning the first n layers if num_layer_trainable < 0
-            trainable_layer_ids = range(-finetuning_args.num_layer_trainable)
+            trainable_layer_ids = range(min(-finetuning_args.freeze_trainable_layers, num_layers))
 
-        freeze_modules = {"all"}
-        for name, _ in model.named_modules():
+        hidden_modules = set()
+        non_hidden_modules = set()
+        for name, _ in model.named_parameters():
             if ".0." in name:
-                freeze_modules.add(name.split(".0.")[-1].split(".")[0])
+                hidden_modules.add(name.split(".0.")[-1].split(".")[0])
             elif ".1." in name:  # MoD starts from layer 1
-                freeze_modules.add(name.split(".1.")[-1].split(".")[0])
+                hidden_modules.add(name.split(".1.")[-1].split(".")[0])
+
+            if re.search(r"\.\d+\.", name) is None:
+                non_hidden_modules.add(name.split(".")[-2])
 
         trainable_layers = []
-        for module_name in finetuning_args.name_module_trainable:
-            if module_name not in freeze_modules:
+        for module_name in finetuning_args.freeze_trainable_modules:
+            if module_name != "all" and module_name not in hidden_modules:
                 raise ValueError(
-                    "Module {} is not found, please choose from {}".format(module_name, ", ".join(freeze_modules))
+                    "Module {} is not found, please choose from {}".format(module_name, ", ".join(hidden_modules))
                 )
 
             for idx in trainable_layer_ids:
                 trainable_layers.append(".{:d}.{}".format(idx, module_name if module_name != "all" else ""))
 
+        if finetuning_args.freeze_extra_modules:
+            for module_name in finetuning_args.freeze_extra_modules:
+                if module_name not in non_hidden_modules:
+                    raise ValueError(
+                        "Module {} is not found, please choose from {}".format(
+                            module_name, ", ".join(non_hidden_modules)
+                        )
+                    )
+
+                trainable_layers.append(module_name)
+
         for name, param in model.named_parameters():
             if any(trainable_layer in name for trainable_layer in trainable_layers):
-                if (not finetuning_args.pure_bf16) and (not finetuning_args.use_badam):
+                if cast_trainable_params_to_fp32:
                     param.data = param.data.to(torch.float32)
             else:
                 param.requires_grad_(False)
@@ -191,7 +215,7 @@ def init_adapter(
                 )
                 model = get_peft_model(model, lora_config)
 
-        if (not finetuning_args.pure_bf16) and (not finetuning_args.use_badam):
+        if cast_trainable_params_to_fp32:
             for param in filter(lambda p: p.requires_grad, model.parameters()):
                 param.data = param.data.to(torch.float32)
 

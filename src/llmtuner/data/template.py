@@ -308,7 +308,7 @@ def _get_jinja_template(template: "Template", tokenizer: "PreTrainedTokenizer") 
         jinja_template += "{% set system_message = '" + _jinja_escape(template.default_system) + "' %}"
 
     jinja_template += (
-        "{% if messages[0]['role'] == 'system' %}" "{% set system_message = messages[0]['content'] %}" "{% endif %}"
+        "{% if messages[0]['role'] == 'system' %}{% set system_message = messages[0]['content'] %}{% endif %}"
     )
 
     system_message = _convert_slots_to_jinja(template.format_system.apply(), tokenizer, placeholder="system_message")
@@ -889,6 +889,22 @@ _register_template(
     format_separator=EmptyFormatter(slots=["\n"]),
     stop_words=["<|im_end|>"],
     replace_eos=True,
+)
+
+
+_register_template(
+    name="yi_vl",
+    format_user=StringFormatter(slots=["### Human: {{content}}\n### Assistant:"]),
+    format_separator=EmptyFormatter(slots=["\n"]),
+    default_system=(
+        "This is a chat between an inquisitive human and an AI assistant. "
+        "Assume the role of the AI assistant. Read all the images carefully, "
+        "and respond to the human's questions with informative, helpful, detailed and polite answers. "
+        "这是一个好奇的人类和一个人工智能助手之间的对话。假设你扮演这个AI助手的角色。"
+        "仔细阅读所有的图像，并对人类的问题做出信息丰富、有帮助、详细的和礼貌的回答。\n\n"
+    ),
+    stop_words=["###"],
+    efficient_eos=True,
 )
 
 
