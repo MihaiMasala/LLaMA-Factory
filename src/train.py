@@ -1,4 +1,4 @@
-from llmtuner import run_exp
+from llamafactory.train.tuner import run_exp
 import os
 os.environ["WANDB_PROJECT"] = "llama_factory"
 
