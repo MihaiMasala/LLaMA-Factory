@@ -323,6 +323,9 @@ register_model_group(
             DownloadSource.DEFAULT: "deepseek-ai/deepseek-moe-16b-base",
             DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-moe-16b-base",
         },
+        "DeepSeek-MoE-16B-v2-Base": {
+            DownloadSource.DEFAULT: "deepseek-ai/DeepSeek-V2-Lite",
+        },
         "DeepSeek-MoE-236B-Base": {
             DownloadSource.DEFAULT: "deepseek-ai/DeepSeek-V2",
             DownloadSource.MODELSCOPE: "deepseek-ai/DeepSeek-V2",
@@ -330,6 +333,9 @@ register_model_group(
         "DeepSeek-MoE-16B-Chat": {
             DownloadSource.DEFAULT: "deepseek-ai/deepseek-moe-16b-chat",
             DownloadSource.MODELSCOPE: "deepseek-ai/deepseek-moe-16b-chat",
+        },
+        "DeepSeek-MoE-16B-v2-Chat": {
+            DownloadSource.DEFAULT: "deepseek-ai/DeepSeek-V2-Lite-Chat",
         },
         "DeepSeek-MoE-236B-Chat": {
             DownloadSource.DEFAULT: "deepseek-ai/DeepSeek-V2-Chat",
@@ -374,6 +380,9 @@ register_model_group(
         "Falcon-7B": {
             DownloadSource.DEFAULT: "tiiuae/falcon-7b",
             DownloadSource.MODELSCOPE: "AI-ModelScope/falcon-7b",
+        },
+        "Falcon-11B": {
+            DownloadSource.DEFAULT: "tiiuae/falcon-11B",
         },
         "Falcon-40B": {
             DownloadSource.DEFAULT: "tiiuae/falcon-40b",
