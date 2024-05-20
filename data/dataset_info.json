@@ -86,18 +86,6 @@
   },
 
 
-  "alpaca_en": {
-    "file_name": "alpaca_data_en_52k.json"
-  },
-  "alpaca_zh": {
-    "file_name": "alpaca_data_zh_51k.json"
-  },
-  "alpaca_gpt4_en": {
-    "file_name": "alpaca_gpt4_data_en.json"
-  },
-  "alpaca_gpt4_zh": {
-    "file_name": "alpaca_gpt4_data_zh.json"
-  },
   "identity": {
     "file_name": "identity.json"
   },
@@ -106,6 +94,23 @@
   },
   "alpaca_zh_demo": {
     "file_name": "alpaca_zh_demo.json"
+  },
+
+  "alpaca_en": {
+    "hf_hub_url": "llamafactory/alpaca_en",
+    "ms_hub_url": "llamafactory/alpaca_en"
+  },
+  "alpaca_zh": {
+    "hf_hub_url": "llamafactory/alpaca_zh",
+    "ms_hub_url": "llamafactory/alpaca_zh"
+  },
+  "alpaca_gpt4_en": {
+    "hf_hub_url": "llamafactory/alpaca_gpt4_en",
+    "ms_hub_url": "llamafactory/alpaca_gpt4_en"
+  },
+  "alpaca_gpt4_zh": {
+    "hf_hub_url": "llamafactory/alpaca_gpt4_zh",
+    "ms_hub_url": "llamafactory/alpaca_gpt4_zh"
   },
   "glaive_toolcall_en_demo": {
     "file_name": "glaive_toolcall_en_demo.json",
