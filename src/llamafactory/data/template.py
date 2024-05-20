@@ -68,8 +68,8 @@ class Template:
         self,
         tokenizer: "PreTrainedTokenizer",
         messages: List[Dict[str, str]],
-        system: str,
-        tools: str,
+        system: Optional[str],
+        tools: Optional[str],
         cutoff_len: int,
         reserved_label_len: int,
     ) -> Sequence[Tuple[List[int], List[int]]]:
@@ -276,7 +276,7 @@ def _add_or_replace_eos_token(tokenizer: "PreTrainedTokenizer", eos_token: str) 
 
 
 def _jinja_escape(content: str) -> str:
-    return content.replace("\n", r"\n").replace("'", r"\'")
+    return content.replace("'", r"\'")
 
 
 def _convert_slots_to_jinja(slots: "SLOTS", tokenizer: "PreTrainedTokenizer", placeholder: str = "content") -> str:
