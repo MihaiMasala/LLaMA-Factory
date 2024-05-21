@@ -67,46 +67,6 @@ def extract_conversation(root, level, msg_list, msgs, full_conv_list, fully_tran
         
     return full_conv_list, fully_translated, fully_validated
     
-
-def build_dataset_and_stats(convs):
-    all_messages = []
-    for conv in convs:
-        all_messages.extend(list(map(lambda x: x[1], conv["conv"])))
-
-    print("Total conversations in ro:", len(convs))
-    print("Total messages:", len(all_messages))
-    print("Total distinct messages:", len(set(all_messages)))
-    full_convs = get_full_conv(convs)
-
-    print("Total conversations to model:", len(full_convs))
-    return full_convs    
-
-
-def get_full_conv(convs):
-    
-    full_convs = []
-    for conv in convs:
-        if conv["order"] == "reversed":
-            chrono_conv = conv["conv"][::-1]
-        elif conv["order"] == "normal":
-            chrono_conv = conv["conv"]
-        # print(chrono_conv)
-        for msg_index, msg in enumerate(chrono_conv):
-            if msg[0] == 'assistant':
-                so_far = chrono_conv[:msg_index+1]
-                so_far_converted = convert_conv_to_hf(so_far)
-                
-                # print("converted:", so_far_converted)
-                # print(format_tokens([so_far_converted], tokenizer))
-                # crt_msgs = list(map(lambda x: x[1][:50], so_far))
-                # print(crt_msgs)
-                # sys.exit()
-                # full_convs.append(crt_msgs)
-                full_convs.append(so_far_converted)
-
-    return full_convs
-
-
 def get_lang_prob(text, lang="ro"):
     try:
         results = langdetect.detect_langs(text)
