@@ -75,6 +75,23 @@
       "response": "message_2"
     }
   },
+  "ro_sft_ultrachat": {
+    "script_url": "ro_sft_ultrachat",
+    "formatting": "sharegpt"
+  },
+  "ro_sft_oasst": {
+    "formatting": "sharegpt",
+    "file_name": "ro_sft_oasst.json",
+    "columns": {
+      "messages": "messages"
+    },
+    "tags": {
+      "role_tag": "role",
+      "content_tag": "content",
+      "user_tag": "prompter",
+      "assistant_tag": "assistant"
+    }
+  },
 
   "ro_dpo_helpsteer":{
     "file_name": "ro_dpo_helpsteer.json",
@@ -84,6 +101,9 @@
       "response": "output"
     }
   },
+
+
+
 
 
   "identity": {
@@ -141,22 +161,6 @@
       "user_tag": "user",
       "assistant_tag": "assistant"
     }
-  },
-  "alpaca_en": {
-    "hf_hub_url": "llamafactory/alpaca_en",
-    "ms_hub_url": "llamafactory/alpaca_en"
-  },
-  "alpaca_zh": {
-    "hf_hub_url": "llamafactory/alpaca_zh",
-    "ms_hub_url": "llamafactory/alpaca_zh"
-  },
-  "alpaca_gpt4_en": {
-    "hf_hub_url": "llamafactory/alpaca_gpt4_en",
-    "ms_hub_url": "llamafactory/alpaca_gpt4_en"
-  },
-  "alpaca_gpt4_zh": {
-    "hf_hub_url": "llamafactory/alpaca_gpt4_zh",
-    "ms_hub_url": "llamafactory/alpaca_gpt4_zh"
   },
   "glaive_toolcall_en": {
     "hf_hub_url": "llamafactory/glaive_toolcall_en",

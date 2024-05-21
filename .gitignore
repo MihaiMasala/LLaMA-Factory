@@ -165,5 +165,11 @@ saves/
 cache/
 data/raw_ro_pretrain/
 data/ro_pretrain/
-data/ro_sft*
-data/ro_dpo*
+data/ro_sft*.json
+data/ro_sft_ultrachat/*.json
+data/ro_sft_bench/
+data/ro_sft_oasst/*.jso*
+
+data/ro_dpo*.json
+data/ro_dpo/*
+
