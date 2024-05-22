@@ -4,6 +4,7 @@ from typing import List
 import sys
 import datasets
 
+description = "Analizează următoarea recenzie și evalueaz-o ca fiind pozitivă sau negativă.\n"
 class LarosedaMultiClass(datasets.GeneratorBasedBuilder):
     VERSION = datasets.Version("0.0.0")
 
@@ -23,7 +24,7 @@ class LarosedaMultiClass(datasets.GeneratorBasedBuilder):
             data_list = json.load(f)["reviews"]
             for entry_id, entry in enumerate(data_list):
                 yield entry_id, {
-                    "prompt": "Recenzie: {0} {1}\nEvaluare:".format(entry["title"].strip(), entry["content"].strip()),
+                    "prompt": "{2}Recenzie: {0} {1}\nEvaluare:".format(entry["title"].strip(), entry["content"].strip(), description),
                     "response": "pozitivă" if int(entry["starRating"]) > 3 else "negativă"
                 }
 
