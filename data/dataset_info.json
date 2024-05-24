@@ -93,7 +93,11 @@
     }
   },
   "ro_sft_aya":{
-    "script_url": "ro_sft_aya"
+    "script_url": "ro_sft_aya",
+    "columns":{
+      "prompt": "prompt",
+      "response": "response"
+    }  
   },
 
 
