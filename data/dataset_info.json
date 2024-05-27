@@ -117,7 +117,6 @@
       "response": "response"
     }  
   },
-
   "ro_laroseda_binary":{
     "script_url": "ro_laroseda_binary",
     "columns":{
@@ -125,7 +124,22 @@
       "response": "response"
     }  
   },
+  "ro_wmt-ro-en":{
+    "script_url": "ro_wmt-ro-en",
+    "columns":{
+      "prompt": "prompt",
+      "response": "response"
+    }  
+  },
+  "ro_wmt-en-ro":{
+    "script_url": "ro_wmt-en-ro",
+    "columns":{
+      "prompt": "prompt",
+      "response": "response"
+    }  
+  },
 
+  
 
   "identity": {
     "file_name": "identity.json"
