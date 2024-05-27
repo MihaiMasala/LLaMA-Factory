@@ -4,7 +4,7 @@ from typing import List
 import sys
 import datasets
 
-description = "Analizează următoarea recenzie și evalueaz-o ca fiind foarte negativă, negativă, pozitivă sau foarte pozitivă.\n"
+description = "Analizează următoarea recenzie și caracterizează nota oferită produsului pe o scară de la 1 la 5, cu următoarele opțiuni: 1, 2, 4 sau 5.\n"
 
 class LarosedaMultiClass(datasets.GeneratorBasedBuilder):
     VERSION = datasets.Version("0.0.0")
@@ -24,18 +24,9 @@ class LarosedaMultiClass(datasets.GeneratorBasedBuilder):
         with open(filepath, "r", encoding="utf-8") as f:
             data_list = json.load(f)["reviews"]
             for entry_id, entry in enumerate(data_list):
-                if str(entry["starRating"]) == "1":
-                    polarity = "foarte negativă"
-                elif str(entry["starRating"]) == "2":
-                    polarity = "negativă"
-                elif str(entry["starRating"]) == "4":
-                    polarity = "pozitivă"
-                else:
-                    polarity = "foarte pozitivă"
-
                 yield entry_id, {
-                    "prompt": "{2}Recenzie: {0} {1}\nEvaluare:".format(entry["title"].strip(), entry["content"].strip(), description),
-                    "response": polarity
+                    "prompt": "{2}Recenzie: {0}. {1}\nNotă:".format(entry["title"].strip(), entry["content"].strip(), description),
+                    "response": str(entry["starRating"])
                 }
 
         

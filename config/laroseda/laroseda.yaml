@@ -1,0 +1,45 @@
+# model
+model_name_or_path: meta-llama/Llama-2-7b-hf
+
+# method
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_target: all
+lora_rank: 8
+lora_alpha: 8
+lora_dropout:0.1
+
+# dataset
+dataset_dir: data
+dataset: ro_laroseda_multiclass
+template: empty
+cutoff_len: 512
+val_size: 0.2
+overwrite_cache: true
+preprocessing_num_workers: 1
+
+# output
+output_dir: checkpoints/meta-llama/Llama-2-7b-hf/sft-lora-all
+logging_steps: 1
+save_strategy: epoch
+plot_loss: true
+overwrite_output_dir: true
+
+# train
+per_device_train_batch_size: 32
+gradient_accumulation_steps: 1
+lr_scheduler_type: cosine 
+learning_rate: 0.0002
+num_train_epochs: 10.0
+warmup_ratio: 0.05
+fp16: true
+flash_attn: fa2
+optim: adamw_8bit
+
+# eval
+per_device_eval_batch_size: 32
+evaluation_strategy: epoch
+
+# misc
+report_to: wandb
