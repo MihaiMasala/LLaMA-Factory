@@ -20,7 +20,7 @@ overwrite_cache: true
 preprocessing_num_workers: 1
 
 # output
-output_dir: checkpoints/meta-llama/Llama-2-7b-hf/sft-lora-all
+output_dir: Checkpoints/meta-llama__Llama-2-7b-hf/sft-lora-all
 logging_steps: 1
 save_strategy: epoch
 plot_loss: true
