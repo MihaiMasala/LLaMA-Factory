@@ -8,7 +8,7 @@ finetuning_type: lora
 lora_target: all
 lora_rank: 8
 lora_alpha: 8
-lora_dropout:0.1
+lora_dropout: 0.1
 
 # dataset
 dataset_dir: data
