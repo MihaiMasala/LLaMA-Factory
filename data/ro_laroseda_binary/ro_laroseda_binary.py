@@ -24,7 +24,7 @@ class LarosedaMultiClass(datasets.GeneratorBasedBuilder):
             data_list = json.load(f)["reviews"]
             for entry_id, entry in enumerate(data_list):
                 yield entry_id, {
-                    "prompt": "{2}Recenzie: {0} {1}\nEvaluare:".format(entry["title"].strip(), entry["content"].strip(), description),
+                    "prompt": "{2}Recenzie: {0}. {1}\nEvaluare:".format(entry["title"].strip(), entry["content"].strip(), description),
                     "response": "pozitivă" if int(entry["starRating"]) > 3 else "negativă"
                 }
 
