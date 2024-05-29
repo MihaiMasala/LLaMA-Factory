@@ -6,12 +6,11 @@ from typing import TYPE_CHECKING, Any, Dict, Generator, Optional
 
 import psutil
 from transformers.trainer import TRAINING_ARGS_NAME
-from transformers.utils import is_torch_cuda_available
 
 from ..extras.constants import TRAINING_STAGES
-from ..extras.misc import get_device_count, torch_gc
+from ..extras.misc import is_gpu_or_npu_available, torch_gc
 from ..extras.packages import is_gradio_available
-from .common import get_module, get_save_dir, load_args, load_config, save_args
+from .common import DEFAULT_CACHE_DIR, get_module, get_save_dir, load_args, load_config, save_args
 from .locales import ALERTS
 from .utils import gen_cmd, get_eval_results, get_trainer_info, save_cmd
 
@@ -64,16 +63,13 @@ class Runner:
         if not from_preview and self.demo_mode:
             return ALERTS["err_demo"][lang]
 
-        if not from_preview and get_device_count() > 1:
-            return ALERTS["err_device_count"][lang]
-
         if do_train:
             stage = TRAINING_STAGES[get("train.training_stage")]
             reward_model = get("train.reward_model")
             if stage == "ppo" and not reward_model:
                 return ALERTS["err_no_reward_model"][lang]
 
-        if not from_preview and not is_torch_cuda_available():
+        if not from_preview and not is_gpu_or_npu_available():
             gr.Warning(ALERTS["warn_no_cuda"][lang])
 
         return ""
@@ -205,6 +201,12 @@ class Runner:
             args["eval_steps"] = args["save_steps"]
             args["per_device_eval_batch_size"] = args["per_device_train_batch_size"]
 
+        # ds config
+        if get("train.ds_stage") != "none":
+            ds_stage = get("train.ds_stage")
+            ds_offload = "offload_" if get("train.ds_offload") else ""
+            args["deepspeed"] = os.path.join(DEFAULT_CACHE_DIR, "ds_z{}_{}config.json".format(ds_stage, ds_offload))
+
         return args
 
     def _parse_eval_args(self, data: Dict["Component", Any]) -> Dict[str, Any]:
@@ -273,7 +275,6 @@ class Runner:
             self.do_train, self.running_data = do_train, data
             args = self._parse_train_args(data) if do_train else self._parse_eval_args(data)
             env = deepcopy(os.environ)
-            env["CUDA_VISIBLE_DEVICES"] = os.environ.get("CUDA_VISIBLE_DEVICES", "0")
             env["LLAMABOARD_ENABLED"] = "1"
             self.trainer = Popen("llamafactory-cli train {}".format(save_cmd(args)), env=env, shell=True)
             yield from self.monitor()

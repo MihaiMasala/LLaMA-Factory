@@ -88,6 +88,19 @@ def register_model_group(
 
 register_model_group(
     models={
+        "Aya-23-8B-Chat": {
+            DownloadSource.DEFAULT: "CohereForAI/aya-23-8B",
+        },
+        "Aya-23-35B-Chat": {
+            DownloadSource.DEFAULT: "CohereForAI/aya-23-35B",
+        },
+    },
+    template="cohere",
+)
+
+
+register_model_group(
+    models={
         "Baichuan-7B-Base": {
             DownloadSource.DEFAULT: "baichuan-inc/Baichuan-7B",
             DownloadSource.MODELSCOPE: "baichuan-inc/baichuan-7B",
@@ -709,6 +722,16 @@ register_model_group(
 
 register_model_group(
     models={
+        "OpenChat3.6-8B-Chat": {
+            DownloadSource.DEFAULT: "openchat/openchat-3.6-8b-20240522",
+        }
+    },
+    template="openchat-3.6",
+)
+
+
+register_model_group(
+    models={
         "Orion-14B-Base": {
             DownloadSource.DEFAULT: "OrionStarAI/Orion-14B-Base",
             DownloadSource.MODELSCOPE: "OrionStarAI/Orion-14B-Base",
@@ -1069,6 +1092,26 @@ register_model_group(
             DownloadSource.MODELSCOPE: "AI-ModelScope/starcoder2-15b",
         },
     }
+)
+
+
+register_model_group(
+    models={
+        "TeleChat-7B-Chat": {
+            DownloadSource.DEFAULT: "Tele-AI/telechat-7B",
+            DownloadSource.MODELSCOPE: "TeleAI/telechat-7B",
+        },
+        "TeleChat-12B-Chat": {
+            DownloadSource.DEFAULT: "Tele-AI/TeleChat-12B",
+            DownloadSource.MODELSCOPE: "TeleAI/TeleChat-12B",
+        },
+        "TeleChat-12B-v2-Chat": {
+            DownloadSource.DEFAULT: "Tele-AI/TeleChat-12B-v2",
+            DownloadSource.MODELSCOPE: "TeleAI/TeleChat-12B-v2",
+        },
+    },
+    module="query,key_value",
+    template="telechat",
 )
 
 

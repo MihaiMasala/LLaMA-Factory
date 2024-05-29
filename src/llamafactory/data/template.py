@@ -778,7 +778,6 @@ _register_template(
 _register_template(
     name="olmo",
     format_user=StringFormatter(slots=["<|user|>\n{{content}}<|assistant|>\n"]),
-    format_assistant=StringFormatter(slots=["{{content}}", {"eos_token"}]),
     format_system=StringFormatter(slots=[{"eos_token"}, "{{content}}"]),
     force_system=True,
 )
@@ -787,8 +786,24 @@ _register_template(
 _register_template(
     name="openchat",
     format_user=StringFormatter(slots=["GPT4 Correct User: {{content}}", {"eos_token"}, "GPT4 Correct Assistant:"]),
-    format_assistant=StringFormatter(slots=["{{content}}", {"eos_token"}]),
     format_system=StringFormatter(slots=[{"bos_token"}, "{{content}}"]),
+    force_system=True,
+)
+
+
+_register_template(
+    name="openchat-3.6",
+    format_user=StringFormatter(
+        slots=[
+            (
+                "<|start_header_id|>GPT4 Correct User<|end_header_id|>\n\n{{content}}<|eot_id|>"
+                "<|start_header_id|>GPT4 Correct Assistant<|end_header_id|>\n\n"
+            )
+        ]
+    ),
+    format_system=StringFormatter(slots=[{"bos_token"}, "{{content}}"]),
+    stop_words=["<|eot_id|>"],
+    replace_eos=True,
     force_system=True,
 )
 
@@ -844,6 +859,15 @@ _register_template(
 
 
 _register_template(
+    name="telechat",
+    format_user=StringFormatter(slots=["<_user>{{content}}<_bot>"]),
+    format_system=StringFormatter(slots=["<_system>{{content}}<_end>"]),
+    stop_words=["<_end>"],
+    replace_eos=True,
+)
+
+
+_register_template(
     name="vicuna",
     format_user=StringFormatter(slots=["USER: {{content}} ASSISTANT:"]),
     default_system=(
@@ -893,6 +917,7 @@ _register_template(
 _register_template(
     name="yi",
     format_user=StringFormatter(slots=["<|im_start|>user\n{{content}}<|im_end|>\n<|im_start|>assistant\n"]),
+    format_system=StringFormatter(slots=["<|im_start|>system\n{{content}}<|im_end|>\n"]),
     format_separator=EmptyFormatter(slots=["\n"]),
     stop_words=["<|im_end|>"],
     replace_eos=True,
