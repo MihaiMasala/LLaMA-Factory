@@ -547,8 +547,13 @@ _register_template(
             )
         ]
     ),
-    format_system=EmptyFormatter(slots=[{"bos_token"}]),
-    force_system=True,
+    format_system=StringFormatter(
+        slots=[{"bos_token"}, "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>{{content}}<|END_OF_TURN_TOKEN|>"]
+    ),
+    default_system=(
+        "You are Command-R, a brilliant, sophisticated, AI-assistant trained to assist human users "
+        "by providing thorough responses. You are trained by Cohere."
+    ),
 )
 
 
