@@ -107,7 +107,7 @@ class ModelArguments:
     )
     vllm_maxlen: int = field(
         default=2048,
-        metadata={"help": "Maximum input length of the vLLM engine."},
+        metadata={"help": "Maximum sequence (prompt + response) length of the vLLM engine."},
     )
     vllm_gpu_util: float = field(
         default=0.9,
