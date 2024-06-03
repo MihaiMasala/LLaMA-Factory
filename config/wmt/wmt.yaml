@@ -1,5 +1,5 @@
 # model
-model_name_or_path: CohereForAI/aya-23-8B
+model_name_or_path: OpenLLM-Ro/RoLlama2-7b-Base
 
 # method
 stage: sft
@@ -12,15 +12,15 @@ lora_dropout: 0.1
 
 # dataset
 dataset_dir: data
-dataset: ro_laroseda_multiclass
-template: cohere
-cutoff_len: 512
+dataset: ro_wmt-en-ro
+template: empty
+cutoff_len: 256
 val_size: 0.2
 overwrite_cache: true
 preprocessing_num_workers: 1
 
 # output
-output_dir: ../Checkpoints/CohereForAI__aya-23-8B/sft-lora-all
+output_dir: ../Checkpoints/OpenLLM-Ro__RoLlama2-7b-Base/sft-lora-all-en-ro
 logging_steps: 1
 save_strategy: epoch
 plot_loss: true
