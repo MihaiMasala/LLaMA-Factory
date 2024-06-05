@@ -3,6 +3,7 @@ import os
 import sys
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
+import numpy as np
 from datasets import load_dataset, load_from_disk
 
 from ..extras.constants import FILEEXT2TYPE
@@ -61,9 +62,9 @@ def load_single_dataset(
             raise ValueError("File {} not found.".format(local_path))
 
         if data_path is None:
-            raise ValueError("File extension must be txt, csv, json or jsonl.")
+            raise ValueError("Allowed file types: {}.".format(",".join(FILEEXT2TYPE.keys())))
     else:
-        raise NotImplementedError
+        raise NotImplementedError("Unknown load type: {}.".format(dataset_attr.load_from))
 
     if dataset_attr.load_from == "ms_hub":
         try:
@@ -106,9 +107,21 @@ def load_single_dataset(
     if data_args.streaming and (dataset_attr.load_from == "file"):  # faster than specifying streaming=True
         dataset = dataset.to_iterable_dataset()  # TODO: add num shards parameter
 
+    if dataset_attr.num_samples is not None and not data_args.streaming:
+        target_num = dataset_attr.num_samples
+        indexes = np.random.permutation(len(dataset))[:target_num]
+        target_num -= len(indexes)
+        if target_num > 0:
+            expand_indexes = np.random.choice(len(dataset), target_num)
+            indexes = np.concatenate((indexes, expand_indexes), axis=0)
+
+        assert len(indexes) == dataset_attr.num_samples, "Sample num mismatched."
+        dataset = dataset.select(indexes)
+        logger.info("Sampled {} examples from dataset {}.".format(dataset_attr.num_samples, dataset_attr))
+
     if data_args.max_samples is not None:  # truncate dataset
-        num_samples = min(data_args.max_samples, len(dataset))
-        dataset = dataset.select(range(num_samples))
+        max_samples = min(data_args.max_samples, len(dataset))
+        dataset = dataset.select(range(max_samples))
 
     return align_dataset(dataset, dataset_attr, data_args)
 
@@ -166,7 +179,7 @@ def get_dataset(
             if training_args.should_save:
                 dataset.save_to_disk(data_args.tokenized_path)
                 logger.info("Tokenized dataset saved at {}.".format(data_args.tokenized_path))
-                logger.info("Please restart the training with `--tokenized_path {}`.".format(data_args.tokenized_path))
+                logger.info("Please restart the training with `tokenized_path: {}`.".format(data_args.tokenized_path))
 
             sys.exit(0)
 

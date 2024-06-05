@@ -547,8 +547,13 @@ _register_template(
             )
         ]
     ),
-    format_system=EmptyFormatter(slots=[{"bos_token"}]),
-    force_system=True,
+    format_system=StringFormatter(
+        slots=[{"bos_token"}, "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>{{content}}<|END_OF_TURN_TOKEN|>"]
+    ),
+    default_system=(
+        "You are Command-R, a brilliant, sophisticated, AI-assistant trained to assist human users "
+        "by providing thorough responses. You are trained by Cohere."
+    ),
 )
 
 
@@ -651,6 +656,19 @@ _register_template(
         slots=["<start_of_turn>tool\n{{content}}<end_of_turn>\n<start_of_turn>model\n"]
     ),
     format_separator=EmptyFormatter(slots=["<end_of_turn>\n"]),
+    efficient_eos=True,
+    force_system=True,
+)
+
+
+_register_template(
+    name="glm4",
+    format_user=StringFormatter(slots=["<|user|>\n{{content}}<|assistant|>"]),
+    format_assistant=StringFormatter(slots=["\n{{content}}"]),
+    format_system=StringFormatter(slots=["[gMASK]<sop>{{content}}"]),
+    format_function=FunctionFormatter(slots=["{{name}}\n{{arguments}}"]),
+    format_observation=StringFormatter(slots=["<|observation|>\n{{content}}<|assistant|>"]),
+    stop_words=["<|user|>", "<|observation|>"],
     efficient_eos=True,
     force_system=True,
 )

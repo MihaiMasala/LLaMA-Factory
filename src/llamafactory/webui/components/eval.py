@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Dict
 
 from ...extras.packages import is_gradio_available
-from ..common import DEFAULT_DATA_DIR, list_dataset
+from ..common import DEFAULT_DATA_DIR, list_datasets
 from .data import create_preview_box
 
 
@@ -57,7 +57,6 @@ def create_eval_tab(engine: "Engine") -> Dict[str, "Component"]:
     with gr.Row():
         output_box = gr.Markdown()
 
-    output_elems = [output_box, progress_bar]
     elem_dict.update(
         dict(
             cmd_preview_btn=cmd_preview_btn,
@@ -68,12 +67,13 @@ def create_eval_tab(engine: "Engine") -> Dict[str, "Component"]:
             output_box=output_box,
         )
     )
+    output_elems = [output_box, progress_bar]
 
     cmd_preview_btn.click(engine.runner.preview_eval, input_elems, output_elems, concurrency_limit=None)
     start_btn.click(engine.runner.run_eval, input_elems, output_elems)
     stop_btn.click(engine.runner.set_abort)
     resume_btn.change(engine.runner.monitor, outputs=output_elems, concurrency_limit=None)
 
-    dataset_dir.change(list_dataset, [dataset_dir], [dataset], queue=False)
+    dataset.focus(list_datasets, [dataset_dir], [dataset], queue=False)
 
     return elem_dict

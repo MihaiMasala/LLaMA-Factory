@@ -1,18 +1,16 @@
 import os
-import signal
 from copy import deepcopy
 from subprocess import Popen, TimeoutExpired
 from typing import TYPE_CHECKING, Any, Dict, Generator, Optional
 
-import psutil
 from transformers.trainer import TRAINING_ARGS_NAME
 
-from ..extras.constants import TRAINING_STAGES
+from ..extras.constants import PEFT_METHODS, TRAINING_STAGES
 from ..extras.misc import is_gpu_or_npu_available, torch_gc
 from ..extras.packages import is_gradio_available
-from .common import DEFAULT_CACHE_DIR, get_module, get_save_dir, load_args, load_config, save_args
+from .common import DEFAULT_CACHE_DIR, get_module, get_save_dir, load_config
 from .locales import ALERTS
-from .utils import gen_cmd, get_eval_results, get_trainer_info, save_cmd
+from .utils import abort_leaf_process, gen_cmd, get_eval_results, get_trainer_info, load_args, save_args, save_cmd
 
 
 if is_gradio_available():
@@ -40,8 +38,7 @@ class Runner:
     def set_abort(self) -> None:
         self.aborted = True
         if self.trainer is not None:
-            for children in psutil.Process(self.trainer.pid).children():  # abort the child process
-                os.kill(children.pid, signal.SIGABRT)
+            abort_leaf_process(self.trainer.pid)
 
     def _initialize(self, data: Dict["Component", Any], do_train: bool, from_preview: bool) -> str:
         get = lambda elem_id: data[self.manager.get_elem_by_id(elem_id)]
@@ -64,10 +61,15 @@ class Runner:
             return ALERTS["err_demo"][lang]
 
         if do_train:
+            if not get("train.output_dir"):
+                return ALERTS["err_no_output_dir"][lang]
+
             stage = TRAINING_STAGES[get("train.training_stage")]
-            reward_model = get("train.reward_model")
-            if stage == "ppo" and not reward_model:
+            if stage == "ppo" and not get("train.reward_model"):
                 return ALERTS["err_no_reward_model"][lang]
+        else:
+            if not get("eval.output_dir"):
+                return ALERTS["err_no_output_dir"][lang]
 
         if not from_preview and not is_gpu_or_npu_available():
             gr.Warning(ALERTS["warn_no_cuda"][lang])
@@ -85,26 +87,16 @@ class Runner:
 
     def _parse_train_args(self, data: Dict["Component", Any]) -> Dict[str, Any]:
         get = lambda elem_id: data[self.manager.get_elem_by_id(elem_id)]
+        model_name, finetuning_type = get("top.model_name"), get("top.finetuning_type")
         user_config = load_config()
-
-        if get("top.adapter_path"):
-            adapter_name_or_path = ",".join(
-                [
-                    get_save_dir(get("top.model_name"), get("top.finetuning_type"), adapter)
-                    for adapter in get("top.adapter_path")
-                ]
-            )
-        else:
-            adapter_name_or_path = None
 
         args = dict(
             stage=TRAINING_STAGES[get("train.training_stage")],
             do_train=True,
             model_name_or_path=get("top.model_path"),
-            adapter_name_or_path=adapter_name_or_path,
             cache_dir=user_config.get("cache_dir", None),
             preprocessing_num_workers=16,
-            finetuning_type=get("top.finetuning_type"),
+            finetuning_type=finetuning_type,
             quantization_bit=int(get("top.quantization_bit")) if get("top.quantization_bit") in ["8", "4"] else None,
             template=get("top.template"),
             rope_scaling=get("top.rope_scaling") if get("top.rope_scaling") in ["linear", "dynamic"] else None,
@@ -134,12 +126,22 @@ class Runner:
             report_to="all" if get("train.report_to") else "none",
             use_galore=get("train.use_galore"),
             use_badam=get("train.use_badam"),
-            output_dir=get_save_dir(get("top.model_name"), get("top.finetuning_type"), get("train.output_dir")),
+            output_dir=get_save_dir(model_name, finetuning_type, get("train.output_dir")),
             fp16=(get("train.compute_type") == "fp16"),
             bf16=(get("train.compute_type") == "bf16"),
             pure_bf16=(get("train.compute_type") == "pure_bf16"),
             plot_loss=True,
+            ddp_timeout=180000000,
         )
+
+        # checkpoints
+        if get("top.checkpoint_path"):
+            if finetuning_type in PEFT_METHODS:  # list
+                args["adapter_name_or_path"] = ",".join(
+                    [get_save_dir(model_name, finetuning_type, adapter) for adapter in get("top.checkpoint_path")]
+                )
+            else:  # str
+                args["model_name_or_path"] = get_save_dir(model_name, finetuning_type, get("top.checkpoint_path"))
 
         # freeze config
         if args["finetuning_type"] == "freeze":
@@ -156,7 +158,7 @@ class Runner:
             args["create_new_adapter"] = get("train.create_new_adapter")
             args["use_rslora"] = get("train.use_rslora")
             args["use_dora"] = get("train.use_dora")
-            args["lora_target"] = get("train.lora_target") or get_module(get("top.model_name"))
+            args["lora_target"] = get("train.lora_target") or get_module(model_name)
             args["additional_target"] = get("train.additional_target") or None
 
             if args["use_llama_pro"]:
@@ -164,13 +166,14 @@ class Runner:
 
         # rlhf config
         if args["stage"] == "ppo":
-            args["reward_model"] = ",".join(
-                [
-                    get_save_dir(get("top.model_name"), get("top.finetuning_type"), adapter)
-                    for adapter in get("train.reward_model")
-                ]
-            )
-            args["reward_model_type"] = "lora" if args["finetuning_type"] == "lora" else "full"
+            if finetuning_type in PEFT_METHODS:
+                args["reward_model"] = ",".join(
+                    [get_save_dir(model_name, finetuning_type, adapter) for adapter in get("train.reward_model")]
+                )
+            else:
+                args["reward_model"] = get_save_dir(model_name, finetuning_type, get("train.reward_model"))
+
+            args["reward_model_type"] = "lora" if finetuning_type == "lora" else "full"
             args["ppo_score_norm"] = get("train.ppo_score_norm")
             args["ppo_whiten_rewards"] = get("train.ppo_whiten_rewards")
             args["top_k"] = 0
@@ -211,25 +214,15 @@ class Runner:
 
     def _parse_eval_args(self, data: Dict["Component", Any]) -> Dict[str, Any]:
         get = lambda elem_id: data[self.manager.get_elem_by_id(elem_id)]
+        model_name, finetuning_type = get("top.model_name"), get("top.finetuning_type")
         user_config = load_config()
-
-        if get("top.adapter_path"):
-            adapter_name_or_path = ",".join(
-                [
-                    get_save_dir(get("top.model_name"), get("top.finetuning_type"), adapter)
-                    for adapter in get("top.adapter_path")
-                ]
-            )
-        else:
-            adapter_name_or_path = None
 
         args = dict(
             stage="sft",
             model_name_or_path=get("top.model_path"),
-            adapter_name_or_path=adapter_name_or_path,
             cache_dir=user_config.get("cache_dir", None),
             preprocessing_num_workers=16,
-            finetuning_type=get("top.finetuning_type"),
+            finetuning_type=finetuning_type,
             quantization_bit=int(get("top.quantization_bit")) if get("top.quantization_bit") in ["8", "4"] else None,
             template=get("top.template"),
             rope_scaling=get("top.rope_scaling") if get("top.rope_scaling") in ["linear", "dynamic"] else None,
@@ -245,13 +238,21 @@ class Runner:
             max_new_tokens=get("eval.max_new_tokens"),
             top_p=get("eval.top_p"),
             temperature=get("eval.temperature"),
-            output_dir=get_save_dir(get("top.model_name"), get("top.finetuning_type"), get("eval.output_dir")),
+            output_dir=get_save_dir(model_name, finetuning_type, get("eval.output_dir")),
         )
 
         if get("eval.predict"):
             args["do_predict"] = True
         else:
             args["do_eval"] = True
+
+        if get("top.checkpoint_path"):
+            if finetuning_type in PEFT_METHODS:  # list
+                args["adapter_name_or_path"] = ",".join(
+                    [get_save_dir(model_name, finetuning_type, adapter) for adapter in get("top.checkpoint_path")]
+                )
+            else:  # str
+                args["model_name_or_path"] = get_save_dir(model_name, finetuning_type, get("top.checkpoint_path"))
 
         return args
 
@@ -296,9 +297,7 @@ class Runner:
         self.running = True
 
         get = lambda elem_id: self.running_data[self.manager.get_elem_by_id(elem_id)]
-        lang = get("top.lang")
-        model_name = get("top.model_name")
-        finetuning_type = get("top.finetuning_type")
+        lang, model_name, finetuning_type = get("top.lang"), get("top.model_name"), get("top.finetuning_type")
         output_dir = get("{}.output_dir".format("train" if self.do_train else "eval"))
         output_path = get_save_dir(model_name, finetuning_type, output_dir)
 
@@ -356,7 +355,7 @@ class Runner:
         config_dict: Dict[str, Any] = {}
         lang = data[self.manager.get_elem_by_id("top.lang")]
         config_path = data[self.manager.get_elem_by_id("train.config_path")]
-        skip_ids = ["top.lang", "top.model_path", "train.output_dir", "train.config_path"]
+        skip_ids = ["top.lang", "top.model_path", "train.output_dir", "train.config_path", "train.device_count"]
         for elem, value in data.items():
             elem_id = self.manager.get_id_by_elem(elem)
             if elem_id not in skip_ids:

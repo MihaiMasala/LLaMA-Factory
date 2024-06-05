@@ -2,6 +2,19 @@ from collections import OrderedDict, defaultdict
 from enum import Enum
 from typing import Dict, Optional
 
+from peft.utils import SAFETENSORS_WEIGHTS_NAME as SAFE_ADAPTER_WEIGHTS_NAME
+from peft.utils import WEIGHTS_NAME as ADAPTER_WEIGHTS_NAME
+from transformers.utils import SAFE_WEIGHTS_INDEX_NAME, SAFE_WEIGHTS_NAME, WEIGHTS_INDEX_NAME, WEIGHTS_NAME
+
+
+CHECKPOINT_NAMES = {
+    SAFE_ADAPTER_WEIGHTS_NAME,
+    ADAPTER_WEIGHTS_NAME,
+    SAFE_WEIGHTS_INDEX_NAME,
+    SAFE_WEIGHTS_NAME,
+    WEIGHTS_INDEX_NAME,
+    WEIGHTS_NAME,
+}
 
 CHOICES = ["A", "B", "C", "D"]
 
@@ -26,9 +39,9 @@ LAYERNORM_NAMES = {"norm", "ln"}
 
 METHODS = ["full", "freeze", "lora"]
 
-MOD_SUPPORTED_MODELS = ["bloom", "falcon", "gemma", "llama", "mistral", "mixtral", "phi", "starcoder2"]
+MOD_SUPPORTED_MODELS = {"bloom", "falcon", "gemma", "llama", "mistral", "mixtral", "phi", "starcoder2"}
 
-PEFT_METHODS = ["lora"]
+PEFT_METHODS = {"lora"}
 
 RUNNING_LOG = "running_log.txt"
 
@@ -49,9 +62,9 @@ TRAINING_STAGES = {
     "Pre-Training": "pt",
 }
 
-STAGES_USE_PAIR_DATA = ["rm", "dpo", "orpo"]
+STAGES_USE_PAIR_DATA = {"rm", "dpo"}
 
-SUPPORTED_CLASS_FOR_S2ATTN = ["llama"]
+SUPPORTED_CLASS_FOR_S2ATTN = {"llama"}
 
 V_HEAD_WEIGHTS_NAME = "value_head.bin"
 
@@ -270,6 +283,26 @@ register_model_group(
 
 register_model_group(
     models={
+        "CodeGemma-7B": {
+            DownloadSource.DEFAULT: "google/codegemma-7b",
+        },
+        "CodeGemma-7B-Chat": {
+            DownloadSource.DEFAULT: "google/codegemma-7b-it",
+            DownloadSource.MODELSCOPE: "AI-ModelScope/codegemma-7b-it",
+        },
+        "CodeGemma-1.1-2B": {
+            DownloadSource.DEFAULT: "google/codegemma-1.1-2b",
+        },
+        "CodeGemma-1.1-7B-Chat": {
+            DownloadSource.DEFAULT: "google/codegemma-1.1-7b-it",
+        },
+    },
+    template="gemma",
+)
+
+
+register_model_group(
+    models={
         "CommandR-35B-Chat": {
             DownloadSource.DEFAULT: "CohereForAI/c4ai-command-r-v01",
             DownloadSource.MODELSCOPE: "AI-ModelScope/c4ai-command-r-v01",
@@ -456,21 +489,21 @@ register_model_group(
 
 register_model_group(
     models={
-        "CodeGemma-7B": {
-            DownloadSource.DEFAULT: "google/codegemma-7b",
+        "GLM-4-9B": {
+            DownloadSource.DEFAULT: "THUDM/glm-4-9b",
+            DownloadSource.MODELSCOPE: "ZhipuAI/glm-4-9b",
         },
-        "CodeGemma-7B-Chat": {
-            DownloadSource.DEFAULT: "google/codegemma-7b-it",
-            DownloadSource.MODELSCOPE: "AI-ModelScope/codegemma-7b-it",
+        "GLM-4-9B-Chat": {
+            DownloadSource.DEFAULT: "THUDM/glm-4-9b-chat",
+            DownloadSource.MODELSCOPE: "ZhipuAI/glm-4-9b-chat",
         },
-        "CodeGemma-1.1-2B": {
-            DownloadSource.DEFAULT: "google/codegemma-1.1-2b",
-        },
-        "CodeGemma-1.1-7B-Chat": {
-            DownloadSource.DEFAULT: "google/codegemma-1.1-7b-it",
+        "GLM-4-9B-1M-Chat": {
+            DownloadSource.DEFAULT: "THUDM/glm-4-9b-chat-1m",
+            DownloadSource.MODELSCOPE: "ZhipuAI/glm-4-9b-chat-1m",
         },
     },
-    template="gemma",
+    module="query_key_value",
+    template="glm4",
 )
 
 
