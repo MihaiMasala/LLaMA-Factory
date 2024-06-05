@@ -147,6 +147,14 @@
     }  
   },
 
+  "ro_sts":{
+    "script_url": "ro_sts",
+    "columns":{
+      "prompt": "prompt",
+      "response": "response"
+    }  
+  },
+
   
 
   "identity": {
