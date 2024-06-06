@@ -1,8 +1,10 @@
 import json
 import os
+import signal
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
+import psutil
 from transformers.trainer_utils import get_last_checkpoint
 from yaml import safe_dump, safe_load
 
@@ -15,6 +17,18 @@ from .locales import ALERTS
 
 if is_gradio_available():
     import gradio as gr
+
+
+def abort_leaf_process(pid: int) -> None:
+    r"""
+    Aborts the leaf processes.
+    """
+    children = psutil.Process(pid).children()
+    if children:
+        for child in children:
+            abort_leaf_process(child.pid)
+    else:
+        os.kill(pid, signal.SIGABRT)
 
 
 def can_quantize(finetuning_type: str) -> "gr.Dropdown":
@@ -180,7 +194,7 @@ def check_output_dir(lang: str, model_name: str, finetuning_type: str, output_di
     r"""
     Check if output dir exists.
     """
-    if os.path.isdir(get_save_dir(model_name, finetuning_type, output_dir)):
+    if model_name and output_dir and os.path.isdir(get_save_dir(model_name, finetuning_type, output_dir)):
         gr.Warning(ALERTS["warn_output_dir_exists"][lang])
 
 

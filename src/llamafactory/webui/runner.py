@@ -1,10 +1,8 @@
 import os
-import signal
 from copy import deepcopy
 from subprocess import Popen, TimeoutExpired
 from typing import TYPE_CHECKING, Any, Dict, Generator, Optional
 
-import psutil
 from transformers.trainer import TRAINING_ARGS_NAME
 
 from ..extras.constants import PEFT_METHODS, TRAINING_STAGES
@@ -12,7 +10,7 @@ from ..extras.misc import is_gpu_or_npu_available, torch_gc
 from ..extras.packages import is_gradio_available
 from .common import DEFAULT_CACHE_DIR, get_module, get_save_dir, load_config
 from .locales import ALERTS
-from .utils import gen_cmd, get_eval_results, get_trainer_info, load_args, save_args, save_cmd
+from .utils import abort_leaf_process, gen_cmd, get_eval_results, get_trainer_info, load_args, save_args, save_cmd
 
 
 if is_gradio_available():
@@ -40,8 +38,7 @@ class Runner:
     def set_abort(self) -> None:
         self.aborted = True
         if self.trainer is not None:
-            for children in psutil.Process(self.trainer.pid).children():  # abort the child process
-                os.kill(children.pid, signal.SIGABRT)
+            abort_leaf_process(self.trainer.pid)
 
     def _initialize(self, data: Dict["Component", Any], do_train: bool, from_preview: bool) -> str:
         get = lambda elem_id: data[self.manager.get_elem_by_id(elem_id)]
@@ -64,10 +61,15 @@ class Runner:
             return ALERTS["err_demo"][lang]
 
         if do_train:
+            if not get("train.output_dir"):
+                return ALERTS["err_no_output_dir"][lang]
+
             stage = TRAINING_STAGES[get("train.training_stage")]
-            reward_model = get("train.reward_model")
-            if stage == "ppo" and not reward_model:
+            if stage == "ppo" and not get("train.reward_model"):
                 return ALERTS["err_no_reward_model"][lang]
+        else:
+            if not get("eval.output_dir"):
+                return ALERTS["err_no_output_dir"][lang]
 
         if not from_preview and not is_gpu_or_npu_available():
             gr.Warning(ALERTS["warn_no_cuda"][lang])

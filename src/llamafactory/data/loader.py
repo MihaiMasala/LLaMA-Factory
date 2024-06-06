@@ -62,9 +62,9 @@ def load_single_dataset(
             raise ValueError("File {} not found.".format(local_path))
 
         if data_path is None:
-            raise ValueError("File extension must be txt, csv, json or jsonl.")
+            raise ValueError("Allowed file types: {}.".format(",".join(FILEEXT2TYPE.keys())))
     else:
-        raise NotImplementedError
+        raise NotImplementedError("Unknown load type: {}.".format(dataset_attr.load_from))
 
     if dataset_attr.load_from == "ms_hub":
         try:
@@ -120,8 +120,8 @@ def load_single_dataset(
         logger.info("Sampled {} examples from dataset {}.".format(dataset_attr.num_samples, dataset_attr))
 
     if data_args.max_samples is not None:  # truncate dataset
-        indexes = np.random.permutation(len(dataset))[: data_args.max_samples]
-        dataset = dataset.select(indexes)
+        max_samples = min(data_args.max_samples, len(dataset))
+        dataset = dataset.select(range(max_samples))
 
     return align_dataset(dataset, dataset_attr, data_args)
 
@@ -179,7 +179,7 @@ def get_dataset(
             if training_args.should_save:
                 dataset.save_to_disk(data_args.tokenized_path)
                 logger.info("Tokenized dataset saved at {}.".format(data_args.tokenized_path))
-                logger.info("Please restart the training with `--tokenized_path {}`.".format(data_args.tokenized_path))
+                logger.info("Please restart the training with `tokenized_path: {}`.".format(data_args.tokenized_path))
 
             sys.exit(0)
 

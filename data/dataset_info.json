@@ -139,6 +139,22 @@
     }  
   },
 
+  "ro_xquad":{
+    "script_url": "ro_xquad",
+    "columns":{
+      "prompt": "prompt",
+      "response": "response"
+    }  
+  },
+
+  "ro_sts":{
+    "script_url": "ro_sts",
+    "columns":{
+      "prompt": "prompt",
+      "response": "response"
+    }  
+  },
+
   
 
   "identity": {
