@@ -10,10 +10,10 @@ from ..extras.constants import FILEEXT2TYPE
 from ..extras.logging import get_logger
 from ..extras.misc import has_tokenized_data
 from .aligner import align_dataset
+from .data_utils import merge_dataset
 from .parser import get_dataset_list
 from .preprocess import get_preprocess_and_print_func
 from .template import get_template_and_fix_tokenizer
-from .utils import merge_dataset
 
 
 if TYPE_CHECKING:
@@ -130,7 +130,7 @@ def get_dataset(
     model_args: "ModelArguments",
     data_args: "DataArguments",
     training_args: "Seq2SeqTrainingArguments",
-    stage: Literal["pt", "sft", "rm", "kto"],
+    stage: Literal["pt", "sft", "rm", "ppo", "kto"],
     tokenizer: "PreTrainedTokenizer",
     processor: Optional["ProcessorMixin"] = None,
 ) -> Union["Dataset", "IterableDataset"]:

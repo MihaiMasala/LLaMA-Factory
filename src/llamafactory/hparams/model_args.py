@@ -15,7 +15,12 @@ class ModelArguments:
     )
     adapter_name_or_path: Optional[str] = field(
         default=None,
-        metadata={"help": "Path to the adapter weight or identifier from huggingface.co/models."},
+        metadata={
+            "help": (
+                "Path to the adapter weight or identifier from huggingface.co/models. "
+                "Use commas to separate multiple adapters."
+            )
+        },
     )
     cache_dir: Optional[str] = field(
         default=None,
@@ -35,7 +40,7 @@ class ModelArguments:
     )
     new_special_tokens: Optional[str] = field(
         default=None,
-        metadata={"help": "Special tokens to be added into the tokenizer."},
+        metadata={"help": "Special tokens to be added into the tokenizer. Use commas to separate multiple tokens."},
     )
     model_revision: str = field(
         default="main",
@@ -101,6 +106,10 @@ class ModelArguments:
         default=False,
         metadata={"help": "Whether or not to upcast the output of lm_head in fp32."},
     )
+    train_from_scratch: bool = field(
+        default=False,
+        metadata={"help": "Whether or not to randomly initialize the model weights."},
+    )
     infer_backend: Literal["huggingface", "vllm"] = field(
         default="huggingface",
         metadata={"help": "Backend engine used at inference."},
@@ -120,6 +129,10 @@ class ModelArguments:
     vllm_max_lora_rank: int = field(
         default=8,
         metadata={"help": "Maximum rank of all LoRAs in the vLLM engine."},
+    )
+    vllm_dtype: Literal["auto", "float16", "bfloat16", "float32"] = field(
+        default="auto",
+        metadata={"help": "Data type for model weights and activations in the vLLM engine."},
     )
     offload_folder: str = field(
         default="offload",
@@ -145,9 +158,9 @@ class ModelArguments:
         default=1,
         metadata={"help": "The file shard size (in GB) of the exported model."},
     )
-    export_device: Literal["cpu", "cuda"] = field(
+    export_device: Literal["cpu", "auto"] = field(
         default="cpu",
-        metadata={"help": "The device used in model export, use cuda to avoid addmm errors."},
+        metadata={"help": "The device used in model export, use `auto` to accelerate exporting."},
     )
     export_quantization_bit: Optional[int] = field(
         default=None,
