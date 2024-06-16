@@ -1,3 +1,20 @@
+# Copyright 2024 HuggingFace Inc. and the LlamaFactory team.
+#
+# This code is inspired by the HuggingFace's transformers library.
+# https://github.com/huggingface/transformers/blob/v4.40.0/examples/pytorch/language-modeling/run_clm.py
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 
@@ -27,6 +44,10 @@ class ModelArguments:
                 "Use commas to separate multiple adapters."
             )
         },
+    )
+    adapter_folder: Optional[str] = field(
+        default=None,
+        metadata={"help": "The folder containing the adapter weights to load."},
     )
     cache_dir: Optional[str] = field(
         default=None,
@@ -133,12 +154,8 @@ class ModelArguments:
         metadata={"help": "Whether or not to disable CUDA graph in the vLLM engine."},
     )
     vllm_max_lora_rank: int = field(
-        default=8,
+        default=32,
         metadata={"help": "Maximum rank of all LoRAs in the vLLM engine."},
-    )
-    vllm_dtype: Literal["auto", "float16", "bfloat16", "float32"] = field(
-        default="auto",
-        metadata={"help": "Data type for model weights and activations in the vLLM engine."},
     )
     offload_folder: str = field(
         default="offload",
@@ -147,6 +164,10 @@ class ModelArguments:
     use_cache: bool = field(
         default=True,
         metadata={"help": "Whether or not to use KV cache in generation."},
+    )
+    infer_dtype: Literal["auto", "float16", "bfloat16", "float32"] = field(
+        default="auto",
+        metadata={"help": "Data type for model weights and activations at inference."},
     )
     hf_hub_token: Optional[str] = field(
         default=None,

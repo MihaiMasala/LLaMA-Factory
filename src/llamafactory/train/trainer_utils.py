@@ -1,7 +1,27 @@
-from contextlib import contextmanager
+# Copyright 2024 HuggingFace Inc. and the LlamaFactory team.
+#
+# This code is inspired by the original GaLore's implementation: https://github.com/jiaweizzhao/GaLore
+# and the original LoRA+'s implementation: https://github.com/nikhil-ghosh-berkeley/loraplus
+# and the original BAdam's implementation: https://github.com/Ledzy/BAdam
+# and the HuggingFace's TRL library: https://github.com/huggingface/trl
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
+from peft import PeftModel
 from transformers import Trainer
 from transformers.optimization import get_scheduler
 from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS
@@ -154,15 +174,48 @@ def create_reward_model(
         return reward_model
 
 
-@contextmanager
-def get_ref_context(accelerator: "Accelerator", model: "PreTrainedModel"):
+def convert_pissa_adapter(
+    output_dir: str,
+    state_dict: Dict[str, "torch.Tensor"],
+    accelerator: "Accelerator",
+    model: "PreTrainedModel",
+    training_args: "Seq2SeqTrainingArguments",
+) -> None:
     r"""
-    Gets adapter context for the reference model.
+    Converts the PiSSA adapter to a LoRA adapter.
     """
-    with accelerator.unwrap_model(model).disable_adapter():
-        model.eval()
-        yield
-        model.train()
+    pissa_init_dir = os.path.join(training_args.output_dir, "pissa_init")
+    pissa_backup_dir = os.path.join(output_dir, "pissa_backup")
+    if output_dir == pissa_init_dir:
+        logger.info("Initial PiSSA adatper will be saved at: {}.".format(pissa_init_dir))
+        unwrapped_model = accelerator.unwrap_model(model)
+        if isinstance(unwrapped_model, PeftModel):
+            init_lora_weights = getattr(unwrapped_model.peft_config["default"], "init_lora_weights")
+            setattr(unwrapped_model.peft_config["default"], "init_lora_weights", True)
+            unwrapped_model.save_pretrained(
+                output_dir,
+                state_dict=state_dict,
+                safe_serialization=training_args.save_safetensors,
+            )
+            setattr(unwrapped_model.peft_config["default"], "init_lora_weights", init_lora_weights)
+    elif output_dir == training_args.output_dir:  # at the end of training
+        logger.info("Converted PiSSA adapter will be saved at: {}.".format(output_dir))
+        unwrapped_model = accelerator.unwrap_model(model)
+        if isinstance(unwrapped_model, PeftModel):  # backup the pissa adapter for further use
+            unwrapped_model.save_pretrained(
+                pissa_backup_dir,
+                state_dict=state_dict,
+                safe_serialization=training_args.save_safetensors,
+            )
+            unwrapped_model.save_pretrained(
+                output_dir,
+                state_dict=state_dict,
+                safe_serialization=training_args.save_safetensors,
+                convert_pissa_to_lora=pissa_init_dir,
+            )
+            # TODO: the model is applied pissa again unexpectedly
+            unwrapped_model.load_adapter(pissa_backup_dir, "default", is_trainable=True)
+            unwrapped_model.set_adapter("default")
 
 
 def _get_decay_parameter_names(model: "PreTrainedModel") -> List[str]:
