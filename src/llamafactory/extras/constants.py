@@ -1,3 +1,17 @@
+# Copyright 2024 the LlamaFactory team.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from collections import OrderedDict, defaultdict
 from enum import Enum
 from typing import Dict, Optional
@@ -20,8 +34,6 @@ CHOICES = ["A", "B", "C", "D"]
 
 DATA_CONFIG = "dataset_info.json"
 
-DEFAULT_MODULE = defaultdict(str)
-
 DEFAULT_TEMPLATE = defaultdict(str)
 
 FILEEXT2TYPE = {
@@ -37,6 +49,8 @@ IGNORE_INDEX = -100
 
 LAYERNORM_NAMES = {"norm", "ln"}
 
+LLAMABOARD_CONFIG = "llamaboard_config.yaml"
+
 METHODS = ["full", "freeze", "lora"]
 
 MOD_SUPPORTED_MODELS = {"bloom", "falcon", "gemma", "llama", "mistral", "mixtral", "phi", "starcoder2"}
@@ -49,9 +63,9 @@ SUBJECTS = ["Average", "STEM", "Social Sciences", "Humanities", "Other"]
 
 SUPPORTED_MODELS = OrderedDict()
 
-TRAINER_CONFIG = "trainer_config.yaml"
-
 TRAINER_LOG = "trainer_log.jsonl"
+
+TRAINING_ARGS = "training_args.yaml"
 
 TRAINING_STAGES = {
     "Supervised Fine-Tuning": "sft",
@@ -80,7 +94,6 @@ class DownloadSource(str, Enum):
 
 def register_model_group(
     models: Dict[str, Dict[DownloadSource, str]],
-    module: Optional[str] = None,
     template: Optional[str] = None,
     vision: bool = False,
 ) -> None:
@@ -91,8 +104,6 @@ def register_model_group(
         else:
             assert prefix == name.split("-")[0], "prefix should be identical."
         SUPPORTED_MODELS[name] = path
-    if module is not None:
-        DEFAULT_MODULE[prefix] = module
     if template is not None:
         DEFAULT_TEMPLATE[prefix] = template
     if vision:
@@ -127,7 +138,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "baichuan-inc/Baichuan-13B-Chat",
         },
     },
-    module="W_pack",
     template="baichuan",
 )
 
@@ -151,7 +161,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "baichuan-inc/Baichuan2-13B-Chat",
         },
     },
-    module="W_pack",
     template="baichuan2",
 )
 
@@ -171,7 +180,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "AI-ModelScope/bloom-7b1",
         },
     },
-    module="query_key_value",
 )
 
 
@@ -190,7 +198,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "AI-ModelScope/bloomz-7b1-mt",
         },
     },
-    module="query_key_value",
 )
 
 
@@ -229,7 +236,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "ZhipuAI/chatglm2-6b",
         }
     },
-    module="query_key_value",
     template="chatglm2",
 )
 
@@ -245,7 +251,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "ZhipuAI/chatglm3-6b",
         },
     },
-    module="query_key_value",
     template="chatglm3",
 )
 
@@ -303,6 +308,16 @@ register_model_group(
 
 register_model_group(
     models={
+        "Codestral-22B-v0.1-Chat": {
+            DownloadSource.DEFAULT: "mistralai/Codestral-22B-v0.1",
+        },
+    },
+    template="mistral",
+)
+
+
+register_model_group(
+    models={
         "CommandR-35B-Chat": {
             DownloadSource.DEFAULT: "CohereForAI/c4ai-command-r-v01",
             DownloadSource.MODELSCOPE: "AI-ModelScope/c4ai-command-r-v01",
@@ -334,7 +349,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "AI-ModelScope/dbrx-instruct",
         },
     },
-    module="Wqkv",
     template="dbrx",
 )
 
@@ -453,7 +467,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "modelscope/falcon-180B-chat",
         },
     },
-    module="query_key_value",
     template="falcon",
 )
 
@@ -502,7 +515,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "ZhipuAI/glm-4-9b-chat-1m",
         },
     },
-    module="query_key_value",
     template="glm4",
 )
 
@@ -549,7 +561,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "Shanghai_AI_Laboratory/internlm2-chat-20b",
         },
     },
-    module="wqkv",
     template="intern2",
 )
 
@@ -571,7 +582,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "DeepLang/LingoWhale-8B",
         }
     },
-    module="qkv_proj",
 )
 
 
@@ -669,6 +679,21 @@ register_model_group(
     },
     template="vicuna",
     vision=True,
+)
+
+
+register_model_group(
+    models={
+        "MiniCPM-2B-SFT-Chat": {
+            DownloadSource.DEFAULT: "openbmb/MiniCPM-2B-sft-bf16",
+            DownloadSource.MODELSCOPE: "OpenBMB/miniCPM-bf16",
+        },
+        "MiniCPM-2B-DPO-Chat": {
+            DownloadSource.DEFAULT: "openbmb/MiniCPM-2B-dpo-bf16",
+            DownloadSource.MODELSCOPE: "OpenBMB/MiniCPM-2B-dpo-bf16",
+        },
+    },
+    template="cpm",
 )
 
 
@@ -858,7 +883,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "LLM-Research/Phi-3-medium-128k-instruct",
         },
     },
-    module="qkv_proj",
     template="phi",
 )
 
@@ -930,7 +954,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "qwen/Qwen-72B-Chat-Int4",
         },
     },
-    module="c_attn",
     template="qwen",
 )
 
@@ -1088,6 +1111,89 @@ register_model_group(
 
 register_model_group(
     models={
+        "Qwen2-0.5B": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-0.5B",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-0.5B",
+        },
+        "Qwen2-1.5B": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-1.5B",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-1.5B",
+        },
+        "Qwen2-7B": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-7B",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-7B",
+        },
+        "Qwen2-72B": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-72B",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-72B",
+        },
+        "Qwen2-MoE-57B": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-57B-A14B",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-57B-A14B",
+        },
+        "Qwen2-0.5B-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-0.5B-Instruct",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-0.5B-Instruct",
+        },
+        "Qwen2-1.5B-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-1.5B-Instruct",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-1.5B-Instruct",
+        },
+        "Qwen2-7B-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-7B-Instruct",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-7B-Instruct",
+        },
+        "Qwen2-72B-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-72B-Instruct",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-72B-Instruct",
+        },
+        "Qwen2-MoE-57B-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-57B-A14B-Instruct",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-57B-A14B-Instruct",
+        },
+        "Qwen2-0.5B-int8-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-0.5B-Instruct-GPTQ-Int8",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-0.5B-Instruct-GPTQ-Int8",
+        },
+        "Qwen2-0.5B-int4-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-0.5B-Instruct-AWQ",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-0.5B-Instruct-AWQ",
+        },
+        "Qwen2-1.5B-int8-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-1.5B-Instruct-GPTQ-Int8",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-1.5B-Instruct-GPTQ-Int8",
+        },
+        "Qwen2-1.5B-int4-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-1.5B-Instruct-AWQ",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-1.5B-Instruct-AWQ",
+        },
+        "Qwen2-7B-int8-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-7B-Instruct-GPTQ-Int8",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-7B-Instruct-GPTQ-Int8",
+        },
+        "Qwen2-7B-int4-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-7B-Instruct-AWQ",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-7B-Instruct-AWQ",
+        },
+        "Qwen2-72B-int8-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-72B-Instruct-GPTQ-Int8",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-72B-Instruct-GPTQ-Int8",
+        },
+        "Qwen2-72B-int4-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-72B-Instruct-AWQ",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-72B-Instruct-AWQ",
+        },
+        "Qwen2-MoE-57B-int4-Chat": {
+            DownloadSource.DEFAULT: "Qwen/Qwen2-57B-A14B-Instruct-GPTQ-Int4",
+            DownloadSource.MODELSCOPE: "qwen/Qwen2-57B-A14B-Instruct-GPTQ-Int4",
+        },
+    },
+    template="qwen",
+)
+
+
+register_model_group(
+    models={
         "SOLAR-10.7B": {
             DownloadSource.DEFAULT: "upstage/SOLAR-10.7B-v1.0",
         },
@@ -1143,7 +1249,6 @@ register_model_group(
             DownloadSource.MODELSCOPE: "TeleAI/TeleChat-12B-v2",
         },
     },
-    module="query,key_value",
     template="telechat",
 )
 
