@@ -3,7 +3,7 @@ import os
 from typing import List
 import sys
 import datasets
-VALUE = -1
+VALUE = 100000
 
 considered_datasets = {"SODA-inst (T)": VALUE, "Xlel_wd-inst (T)": VALUE, "HotpotQA (T)": VALUE, "CNN-Daily-Mail (T)": VALUE,
                        "NQ-Open (T)": VALUE, "Mintaka-inst (T)": VALUE, "MLQA-en (T)": VALUE, "PIQA (T)": VALUE, 
@@ -15,15 +15,15 @@ so_far = {}
 
 _URL = "https://huggingface.co/datasets/CohereForAI/aya_collection_language_split/resolve/main/romanian/train-00000-of-00001.parquet"
 _URLS = {
-    # "train": [
-    #     _URL + "train-00000-of-00001.parquet",
-    # ],
+    "train": [
+        _URL + "train-00000-of-00001.parquet",
+    ],
     # "test": [
     #     _URL + "test-00000-of-00001.parquet",
     # ],
-    "validation": [
-        _URL + "validation-00000-of-00001.parquet",
-    ],
+    # "validation": [
+        # _URL + "validation-00000-of-00001.parquet",
+    # ],
 }
 
 class Aya(datasets.GeneratorBasedBuilder):
