@@ -160,8 +160,6 @@ cython_debug/
 .idea/
 
 # custom .gitignore
-user.config
-saves/
 cache/
 data/raw_ro_pretrain/
 data/ro_pretrain/
@@ -173,3 +171,7 @@ data/ro_sft_oasst/*.jso*
 data/ro_dpo*.json
 data/ro_dpo/*
 
+config/
+saves/
+output/
+wandb/
