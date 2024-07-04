@@ -158,6 +158,9 @@ def get_train_args(args: Optional[Dict[str, Any]] = None) -> _TRAIN_CLS:
     if finetuning_args.stage != "sft" and training_args.predict_with_generate:
         raise ValueError("`predict_with_generate` cannot be set as True except SFT.")
 
+    if finetuning_args.stage != "sft" and data_args.neat_packing:
+        raise ValueError("`neat_packing` cannot be set as True except SFT.")
+
     if finetuning_args.stage == "sft" and training_args.do_predict and not training_args.predict_with_generate:
         raise ValueError("Please enable `predict_with_generate` to save model predictions.")
 
@@ -229,6 +232,10 @@ def get_train_args(args: Optional[Dict[str, Any]] = None) -> _TRAIN_CLS:
 
     if model_args.use_unsloth and is_deepspeed_zero3_enabled():
         raise ValueError("Unsloth is incompatible with DeepSpeed ZeRO-3.")
+
+    if data_args.neat_packing and not data_args.packing:
+        logger.warning("`neat_packing` requires `packing` is True. Change it to True.")
+        data_args.packing = True
 
     _verify_model_args(model_args, finetuning_args)
     _check_extra_dependencies(model_args, finetuning_args, training_args)
@@ -311,9 +318,10 @@ def get_train_args(args: Optional[Dict[str, Any]] = None) -> _TRAIN_CLS:
 
     model_args.device_map = {"": get_current_device()}
     model_args.model_max_length = data_args.cutoff_len
-    # data_args.packing = data_args.packing if data_args.packing is not None else finetuning_args.stage == "pt"
+    model_args.block_diag_attn = data_args.neat_packing
     data_args.packing = data_args.packing if data_args.packing is not None else False
-    # Log on each process the small summary:
+
+    # Log on each process the small summary
     logger.info(
         "Process rank: {}, device: {}, n_gpu: {}, distributed training: {}, compute dtype: {}".format(
             training_args.local_rank,

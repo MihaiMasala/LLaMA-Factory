@@ -1,7 +1,4 @@
-# Copyright 2024 HuggingFace Inc. and the LlamaFactory team.
-#
-# This code is inspired by the HuggingFace's transformers library.
-# https://github.com/huggingface/transformers/blob/v4.40.0/src/transformers/trainer.py
+# Copyright 2024 the LlamaFactory team.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -82,9 +79,8 @@ def fix_valuehead_checkpoint(
         if name.startswith("v_head."):
             v_head_state_dict[name] = param
         else:
-            decoder_state_dict[name.replace("pretrained_model.", "")] = param
+            decoder_state_dict[name.replace("pretrained_model.", "", count=1)] = param
 
-    os.remove(path_to_checkpoint)
     model.pretrained_model.save_pretrained(
         output_dir, state_dict=decoder_state_dict or None, safe_serialization=safe_serialization
     )
@@ -94,6 +90,7 @@ def fix_valuehead_checkpoint(
     else:
         torch.save(v_head_state_dict, os.path.join(output_dir, V_HEAD_WEIGHTS_NAME))
 
+    os.remove(path_to_checkpoint)
     logger.info("Value head model saved at: {}".format(output_dir))
 
 

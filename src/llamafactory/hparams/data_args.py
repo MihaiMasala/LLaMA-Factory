@@ -45,10 +45,6 @@ class DataArguments:
         default=1024,
         metadata={"help": "The cutoff length of the tokenized inputs in the dataset."},
     )
-    reserved_label_len: int = field(
-        default=1,
-        metadata={"help": "The minimum cutoff length reserved for the tokenized labels in the dataset."},
-    )
     train_on_prompt: bool = field(
         default=False,
         metadata={"help": "Whether to disable the mask on the prompt or not."},
@@ -87,9 +83,7 @@ class DataArguments:
     )
     ignore_pad_token_for_loss: bool = field(
         default=True,
-        metadata={
-            "help": "Whether or not to ignore the tokens corresponding to padded labels in the loss computation."
-        },
+        metadata={"help": "Whether or not to ignore the tokens corresponding to the pad label in loss computation."},
     )
     val_size: float = field(
         default=0.0,
@@ -97,9 +91,11 @@ class DataArguments:
     )
     packing: Optional[bool] = field(
         default=None,
-        metadata={
-            "help": "Whether or not to pack the sequences in training. Will automatically enable in pre-training."
-        },
+        metadata={"help": "Enable sequences packing in training. Will automatically enable in pre-training."},
+    )
+    neat_packing: bool = field(
+        default=False,
+        metadata={"help": "Enable sequence packing without cross-attention."},
     )
     tool_format: Optional[str] = field(
         default=None,
@@ -111,9 +107,6 @@ class DataArguments:
     )
 
     def __post_init__(self):
-        if self.reserved_label_len >= self.cutoff_len:
-            raise ValueError("`reserved_label_len` must be smaller than `cutoff_len`.")
-
         if self.streaming and self.val_size > 1e-6 and self.val_size < 1:
             raise ValueError("Streaming mode should have an integer val size.")
 
