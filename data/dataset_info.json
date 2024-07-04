@@ -5,14 +5,16 @@
       "prompt": "raw_text"
     }
   },
+
+
   "ro_sft_alpaca_gpt4":{
-    "file_name": "ro_sft_alpaca_gpt4.json"
+    "hf_hub_url": "OpenLLM-Ro/ro_sft_alpaca_gpt4"
   },
   "ro_sft_alpaca":{
-    "file_name": "ro_sft_alpaca.json"
+    "hf_hub_url": "OpenLLM-Ro/ro_sft_alpaca"
   },
   "ro_sft_dolly":{
-    "file_name": "ro_sft_dolly.json",
+    "hf_hub_url": "OpenLLM-Ro/ro_sft_dolly",
     "columns": {
       "prompt": "instruction",
       "query": "context",
@@ -20,7 +22,7 @@
     }
   },
   "ro_sft_selfinstruct_gpt4":{
-    "file_name": "ro_sft_selfinstruct_gpt4.json",
+    "hf_hub_url": "OpenLLM-Ro/ro_sft_selfinstruct_gpt4",
     "columns": {
       "prompt": "instruction",
       "query": "input",
@@ -29,7 +31,7 @@
   },
   "ro_sft_norobots":{
     "formatting": "sharegpt",
-    "file_name": "ro_sft_norobots.json",
+    "hf_hub_url": "OpenLLM-Ro/ro_sft_norobots",
     "columns": {
       "messages": "messages"
     },
@@ -56,7 +58,7 @@
   },
   "ro_sft_orca":{
     "formatting": "sharegpt",
-    "file_name": "ro_sft_orca.json",
+    "hf_hub_url": "OpenLLM-Ro/ro_sft_orca",
     "columns": {
       "messages": "messages"
     },
@@ -69,19 +71,23 @@
     }
   },
   "ro_sft_camel":{
-    "file_name": "ro_sft_camel.json",
+    "hf_hub_url": "OpenLLM-Ro/ro_sft_camel",
     "columns": {
       "prompt": "message_1",
       "response": "message_2"
     }
   },
+
+
+
   "ro_sft_ultrachat": {
     "script_url": "ro_sft_ultrachat",
     "formatting": "sharegpt"
   },
+
   "ro_sft_oasst": {
     "formatting": "sharegpt",
-    "file_name": "ro_sft_oasst.json",
+    "hf_hub_url": "OpenLLM-Ro/ro_sft_oasst",
     "columns": {
       "messages": "messages"
     },
@@ -139,7 +145,6 @@
       "response": "response"
     }  
   },
-
   "ro_xquad":{
     "script_url": "ro_xquad",
     "columns":{
@@ -147,7 +152,6 @@
       "response": "response"
     }  
   },
-
   "ro_sts":{
     "script_url": "ro_sts",
     "columns":{
