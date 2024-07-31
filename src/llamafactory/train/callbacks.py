@@ -134,7 +134,7 @@ class PissaConvertCallback(TrainerCallback):
         if args.should_save:
             model = kwargs.pop("model")
             pissa_init_dir = os.path.join(args.output_dir, "pissa_init")
-            logger.info("Initial PiSSA adatper will be saved at: {}.".format(pissa_init_dir))
+            logger.info("Initial PiSSA adapter will be saved at: {}.".format(pissa_init_dir))
             if isinstance(model, PeftModel):
                 init_lora_weights = getattr(model.peft_config["default"], "init_lora_weights")
                 setattr(model.peft_config["default"], "init_lora_weights", True)
@@ -165,7 +165,8 @@ class PissaConvertCallback(TrainerCallback):
                 )
                 model.load_adapter(pissa_backup_dir, "default", is_trainable=True)
                 model.set_adapter("default")
-                model.delete_adapter("pissa_init")
+                if "pissa_init" in model.peft_config.keys():
+                    model.delete_adapter("pissa_init")
                 setattr(model.peft_config["default"], "init_lora_weights", init_lora_weights)
 
 
