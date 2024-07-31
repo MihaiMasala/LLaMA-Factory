@@ -6,6 +6,14 @@
     }
   },
 
+  "ro_pretrain_fulg": {
+    "hf_hub_url": "faur-ai/fulg",
+    "folder": "2020-29",
+    "columns": {
+      "prompt": "raw_text"
+    }
+  },
+
 
   "ro_sft_alpaca_gpt4":{
     "hf_hub_url": "OpenLLM-Ro/ro_sft_alpaca_gpt4"
