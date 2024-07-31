@@ -10,7 +10,7 @@
     "hf_hub_url": "faur-ai/fulg",
     "folder": "2020-29",
     "columns": {
-      "prompt": "raw_text"
+      "prompt": "raw_content"
     }
   },
 
