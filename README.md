@@ -119,3 +119,8 @@ Set `WANDB_API_KEY` to [your key](https://wandb.ai/authorize) when launching tra
       url={https://arxiv.org/abs/2406.18266}, 
 }
 ```
+
+### Acknowledgement
+This repo benefits from [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory). Thanks for their wonderful works.
+
+
