@@ -310,14 +310,15 @@ def _get_jinja_template(template: "Template", tokenizer: "PreTrainedTokenizer") 
         jinja_template += "{% set system_message = '" + _jinja_escape(template.default_system) + "' %}"
 
     jinja_template += (
-        "{% if messages[0]['role'] == 'system' %}{% set system_message = messages[0]['content'] %}{% endif %}"
+        "{% if messages[0]['role'] == 'system' %}{% set loop_messages = messages[1:] %}"
+        "{% set system_message = messages[0]['content'] %}{% else %}{% set loop_messages = messages %}{% endif %}"
     )
 
     system_message = _convert_slots_to_jinja(template.format_system.apply(), tokenizer, placeholder="system_message")
     if not isinstance(template, Llama2Template):
         jinja_template += "{% if system_message is defined %}{{ " + system_message + " }}{% endif %}"
 
-    jinja_template += "{% for message in messages %}"
+    jinja_template += "{% for message in loop_messages %}"
     jinja_template += "{% set content = message['content'] %}"
     if isinstance(template, Llama2Template):
         jinja_template += "{% if loop.index0 == 0 and system_message is defined %}"
@@ -831,6 +832,20 @@ _register_template(
     format_observation=StringFormatter(slots=["<|im_start|>tool\n{{content}}<|im_end|>\n<|im_start|>assistant\n"]),
     format_separator=EmptyFormatter(slots=["\n"]),
     default_system="You are a helpful assistant.",
+    stop_words=["<|im_end|>"],
+    replace_eos=True,
+)
+
+
+_register_template(
+    name="sailor",
+    format_user=StringFormatter(slots=["<|im_start|>question\n{{content}}<|im_end|>\n<|im_start|>answer\n"]),
+    format_system=StringFormatter(slots=["<|im_start|>system\n{{content}}<|im_end|>\n"]),
+    format_separator=EmptyFormatter(slots=["\n"]),
+    default_system=(
+        "You are an AI assistant named Sailor created by Sea AI Lab. "
+        "Your answer should be friendly, unbiased, faithful, informative and detailed."
+    ),
     stop_words=["<|im_end|>"],
     replace_eos=True,
 )
