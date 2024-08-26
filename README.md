@@ -105,7 +105,7 @@ run_name: test_run # optional
 Set `WANDB_API_KEY` to [your key](https://wandb.ai/authorize) when launching training tasks to log in with your W&B account.
 
 
-## Cite as
+## Citation
 
 
 ```bibtex
