@@ -105,7 +105,7 @@ run_name: test_run # optional
 Set `WANDB_API_KEY` to [your key](https://wandb.ai/authorize) when launching training tasks to log in with your W&B account.
 
 
-## Cite as
+## Citation
 
 
 ```bibtex
@@ -121,6 +121,6 @@ Set `WANDB_API_KEY` to [your key](https://wandb.ai/authorize) when launching tra
 ```
 
 ### Acknowledgement
-This repo benefits from [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory). Thanks for their wonderful works.
+This repo benefits from [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory). We thank them for their wonderful work.
 
 
