@@ -75,8 +75,7 @@ def fix_valuehead_checkpoint(
         state_dict: Dict[str, torch.Tensor] = torch.load(path_to_checkpoint, map_location="cpu")
 
     os.remove(path_to_checkpoint)
-    decoder_state_dict = {}
-    v_head_state_dict = {}
+    decoder_state_dict, v_head_state_dict = {}, {}
     for name, param in state_dict.items():
         if name.startswith("v_head."):
             v_head_state_dict[name] = param
@@ -319,7 +318,7 @@ class LogCallback(TrainerCallback):
         if self.webui_mode and all(key in logs for key in ["loss", "learning_rate", "epoch"]):
             logger.info(
                 "{{'loss': {:.4f}, 'learning_rate': {:2.4e}, 'epoch': {:.2f}, 'throughput': {}}}".format(
-                    logs["loss"], logs["learning_rate"], logs["epoch"], logs.get("throughput")
+                    logs["loss"], logs["learning_rate"], logs["epoch"], logs.get("throughput", "N/A")
                 )
             )
 

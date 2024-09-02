@@ -17,10 +17,11 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple
 
 from ...extras.constants import IGNORE_INDEX
 from ...extras.logging import get_logger
-from .processor_utils import get_paligemma_token_type_ids, get_pixel_values, greedy_knapsack, infer_seqlen
+from .processor_utils import greedy_knapsack, infer_seqlen
 
 
 if TYPE_CHECKING:
+    from PIL.Image import Image
     from transformers import PreTrainedTokenizer, ProcessorMixin
 
     from ...hparams import DataArguments
@@ -35,26 +36,18 @@ def _encode_supervised_example(
     response: Sequence[Dict[str, str]],
     system: Optional[str],
     tools: Optional[str],
+    images: Sequence["Image"],
     template: "Template",
     tokenizer: "PreTrainedTokenizer",
     processor: Optional["ProcessorMixin"],
     cutoff_len: int,
     train_on_prompt: bool,
     mask_history: bool,
-) -> Tuple[List[int], List[int]]:
-    if processor is not None and not hasattr(processor, "image_seq_length"):  # llava-like models
-        prompt[0]["content"] = template.image_token + prompt[0]["content"]
-
-    messages = prompt + response
-    input_ids, labels = [], []
-
-    if processor is not None and hasattr(processor, "image_seq_length"):  # paligemma models
-        image_token_id = tokenizer.convert_tokens_to_ids(template.image_token)
-        input_ids += [image_token_id] * getattr(processor, "image_seq_length")
-        labels += [IGNORE_INDEX] * getattr(processor, "image_seq_length")
-
+) -> Tuple[List[int], List[int], Dict[str, Any]]:
+    messages = template.mm_plugin.process_messages(prompt + response, images, processor)
+    input_ids, labels = template.mm_plugin.process_token_ids([], [], images, tokenizer, processor)
     encoded_pairs = template.encode_multiturn(tokenizer, messages, system, tools)
-    total_length = 1 if template.efficient_eos else 0
+    total_length = len(input_ids) + (1 if template.efficient_eos else 0)
     if mask_history:
         encoded_pairs = encoded_pairs[::-1]  # high priority for last turns
 
@@ -90,7 +83,10 @@ def _encode_supervised_example(
         input_ids += [tokenizer.eos_token_id]
         labels += [tokenizer.eos_token_id]
 
-    return input_ids, labels
+    extra_inputs = template.mm_plugin.get_mm_inputs(
+        images=images, feature_seqlens={"token_type_ids": len(input_ids)}, processor=processor
+    )
+    return input_ids, labels, extra_inputs
 
 
 def preprocess_supervised_dataset(
@@ -99,25 +95,21 @@ def preprocess_supervised_dataset(
     tokenizer: "PreTrainedTokenizer",
     processor: Optional["ProcessorMixin"],
     data_args: "DataArguments",
-) -> Dict[str, List[List[int]]]:
+) -> Dict[str, List[Any]]:
     # build inputs with format `<bos> X Y <eos>` and labels with format `<ignore> ... <ignore> Y <eos>`
     # for multiturn examples, we only mask the prompt part in each prompt-response pair.
-    model_inputs = {"input_ids": [], "attention_mask": [], "labels": []}
-    if processor is not None:
-        model_inputs["pixel_values"] = []
-        if hasattr(processor, "image_seq_length"):  # paligemma models
-            model_inputs["token_type_ids"] = []
-
+    model_inputs = defaultdict(list)
     for i in range(len(examples["prompt"])):
         if len(examples["prompt"][i]) % 2 != 1 or len(examples["response"][i]) != 1:
             logger.warning("Dropped invalid example: {}".format(examples["prompt"][i] + examples["response"][i]))
             continue
 
-        input_ids, labels = _encode_supervised_example(
+        input_ids, labels, extra_inputs = _encode_supervised_example(
             prompt=examples["prompt"][i],
             response=examples["response"][i],
             system=examples["system"][i],
             tools=examples["tools"][i],
+            images=examples["images"][i],
             template=template,
             tokenizer=tokenizer,
             processor=processor,
@@ -128,10 +120,8 @@ def preprocess_supervised_dataset(
         model_inputs["input_ids"].append(input_ids)
         model_inputs["attention_mask"].append([1] * len(input_ids))
         model_inputs["labels"].append(labels)
-        if processor is not None:
-            model_inputs["pixel_values"].append(get_pixel_values(examples["images"][i], processor))
-            if hasattr(processor, "image_seq_length"):  # paligemma models
-                model_inputs["token_type_ids"].append(get_paligemma_token_type_ids(len(input_ids), processor))
+        for key, value in extra_inputs.items():
+            model_inputs[key].append(value)
 
     return model_inputs
 
@@ -140,10 +130,15 @@ def preprocess_packed_supervised_dataset(
     examples: Dict[str, List[Any]],
     template: "Template",
     tokenizer: "PreTrainedTokenizer",
+    processor: Optional["ProcessorMixin"],
     data_args: "DataArguments",
-) -> Dict[str, List[List[int]]]:
+) -> Dict[str, List[Any]]:
+    # TODO: use `position_ids` to achieve packing
     # build inputs with format `<bos> X1 Y1 <eos> <bos> X2 Y2 <eos>`
     # and labels with format `<ignore> ... <ignore> Y1 <eos> <ignore> ... <ignore> Y2 <eos>`
+    if processor is not None:
+        raise NotImplementedError("`packing` have not been implemented for multimodal datasets.")
+
     valid_num = 0
     batch_input_ids, batch_labels = [], []
     lengths = []
@@ -158,6 +153,7 @@ def preprocess_packed_supervised_dataset(
             response=examples["response"][i],
             system=examples["system"][i],
             tools=examples["tools"][i],
+            images=examples["images"][i],
             template=template,
             tokenizer=tokenizer,
             processor=None,
@@ -175,7 +171,7 @@ def preprocess_packed_supervised_dataset(
             batch_labels.append(labels)
             valid_num += 1
 
-    model_inputs = {"input_ids": [], "attention_mask": [], "labels": []}
+    model_inputs = defaultdict(list)
     knapsacks = greedy_knapsack(lengths, data_args.cutoff_len - 1)  # reserved for the padding token
     for knapsack in knapsacks:
         packed_input_ids, packed_attention_masks, packed_labels = [], [], []

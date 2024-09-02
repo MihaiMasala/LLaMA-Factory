@@ -512,6 +512,14 @@
       "assistant_tag": "assistant"
     }
   },
+  "pokemon_cap": {
+    "hf_hub_url": "llamafactory/pokemon-gpt4o-captions",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "images": "images"
+    }
+  },
   "mllm_pt_demo": {
     "hf_hub_url": "BUAADreamer/mllm_pt_demo",
     "formatting": "sharegpt",
@@ -603,6 +611,17 @@
       "prompt": "instruction",
       "chosen": "chosen",
       "rejected": "rejected"
+    }
+  },
+  "rlhf_v": {
+    "hf_hub_url": "llamafactory/RLHF-V",
+    "ranking": true,
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "chosen": "chosen",
+      "rejected": "rejected",
+      "images": "images"
     }
   },
   "orca_pairs": {

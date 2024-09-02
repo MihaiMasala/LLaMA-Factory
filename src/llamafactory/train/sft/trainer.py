@@ -78,18 +78,19 @@ class CustomSeq2SeqTrainer(Seq2SeqTrainer):
     def prediction_step(
         self,
         model: "torch.nn.Module",
-        inputs: Dict[str, Union[torch.Tensor, Any]],
+        inputs: Dict[str, Union["torch.Tensor", Any]],
         prediction_loss_only: bool,
         ignore_keys: Optional[List[str]] = None,
-    ) -> Tuple[Optional[float], Optional[torch.Tensor], Optional[torch.Tensor]]:
+    ) -> Tuple[Optional[float], Optional["torch.Tensor"], Optional["torch.Tensor"]]:
         r"""
         Removes the prompt part in the generated tokens.
 
         Subclass and override to inject custom behavior.
         """
-        labels = inputs["labels"].detach().clone() if "labels" in inputs else None  # backup labels
+        labels = inputs["labels"] if "labels" in inputs else None
         if self.args.predict_with_generate:
             assert self.tokenizer.padding_side == "left", "This method only accepts left-padded tensor."
+            labels = labels.detach().clone() if labels is not None else None  # backup labels
             prompt_len, label_len = inputs["input_ids"].size(-1), inputs["labels"].size(-1)
             if prompt_len > label_len:
                 inputs["labels"] = self._pad_tensors_to_target_len(inputs["labels"], inputs["input_ids"])
@@ -105,7 +106,7 @@ class CustomSeq2SeqTrainer(Seq2SeqTrainer):
 
         return loss, generated_tokens, labels
 
-    def _pad_tensors_to_target_len(self, src_tensor: torch.Tensor, tgt_tensor: torch.Tensor) -> torch.Tensor:
+    def _pad_tensors_to_target_len(self, src_tensor: "torch.Tensor", tgt_tensor: "torch.Tensor") -> "torch.Tensor":
         r"""
         Pads the tensor to the same length as the target tensor.
         """

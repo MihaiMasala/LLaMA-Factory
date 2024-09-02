@@ -14,9 +14,7 @@
 
 import json
 import os
-from typing import TYPE_CHECKING, Dict, Generator, List, Optional, Sequence, Tuple
-
-from numpy.typing import NDArray
+from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Sequence, Tuple
 
 from ..chat import ChatModel
 from ..data import Role
@@ -90,7 +88,6 @@ class WebChatModel(ChatModel):
             template=get("top.template"),
             flash_attn="fa2" if get("top.booster") == "flashattn2" else "auto",
             use_unsloth=(get("top.booster") == "unsloth"),
-            visual_inputs=get("top.visual_inputs"),
             rope_scaling=get("top.rope_scaling") if get("top.rope_scaling") in ["linear", "dynamic"] else None,
             infer_backend=get("infer.infer_backend"),
             infer_dtype=get("infer.infer_dtype"),
@@ -135,7 +132,7 @@ class WebChatModel(ChatModel):
         messages: Sequence[Dict[str, str]],
         system: str,
         tools: str,
-        image: Optional[NDArray],
+        image: Optional[Any],
         max_new_tokens: int,
         top_p: float,
         temperature: float,
